@@ -17,7 +17,7 @@ class Chip8():
         self.reg_i = 0
 
         # Pseudo-registers
-        self.reg_pc = 512 # Start of user available memory
+        self.reg_pc = 512  # Start of user available memory
         self.reg_sp = 0
 
         # Stack
@@ -35,10 +35,8 @@ class Chip8():
 
         binary_data = data_to_binary(data)
 
-        for bit_position in range(len(binary_data)):
+        for bit_position in binary_data:
             self.memory[512 + bit_position] = int(binary_data[bit_position])
-
-        breakpoint()
 
     def clear_memory(self):
         '''Sets all the memory to zeroes.'''
