@@ -3,7 +3,7 @@
 
 from sys import argv
 from binascii import hexlify
-from machine import Chip8
+from vm import Chip8
 
 
 def load_rom(input_file):
@@ -17,7 +17,6 @@ def load_rom(input_file):
 
 
 if __name__ == "__main__":
-    chip_8 = Chip8()
-
     GAME_ROM = load_rom(argv[1])
-    chip_8.load_binary(GAME_ROM)
+
+    chip_8 = Chip8(GAME_ROM)
