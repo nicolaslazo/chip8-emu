@@ -3,8 +3,12 @@
 
 
 def hex_to_binary(data):
-    '''Returns the binary equivalent of hex data.'''
+    '''Returns the binary equivalent of hexadecimal data.'''
     return bin(int(data, 16))[2:]
+
+def binary_to_hex(data):
+    '''Returns the hexadecimal equivalent of binary data'''
+    return hex(int(data, 2))[2:]
 
 
 class MemoryBuffer:
@@ -21,9 +25,20 @@ class MemoryBuffer:
             data = data[:slice_size]  # Truncates the data to fit in the slice
 
             self.memory = self.memory[:subscript.start] + data + [subscript.stop:]
+        else:
+            self.memory = self.memory[:subscript] + data + self.memory[subscript+1:]
 
     def __str__(self):
         print(self.memory)
+
+    def read_nibble_from_addr(self, addr):
+        '''Reads 2 bytes from addr.'''
+        addr = int(addr, 16)
+        return binary_to_hex(self.memory[addr:addr+16])
+
+    def write_nibble_to_addr(self, data, addr):
+        '''Writes 2 bytes to the specified memory address'''
+        memory[addr:addr+16] = hex_to_binary(data)
 
 
 class Chip8:
@@ -53,6 +68,3 @@ class Chip8:
         '''Increases the PC register to point to the next instruction.'''
         self.reg_pc += 2  # Instructions are 2 bytes long
 
-    def read_nibble_from_addr(self, addr):
-        '''Reads 2 bytes from addr.'''
-        return self.memory[addr:addr+16]
