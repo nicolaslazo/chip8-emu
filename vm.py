@@ -15,9 +15,12 @@ class MemoryBuffer:
         binary_data = hex_to_binary(program)
         self[512] = binary_data
 
-    def __setitem__(self, index, data):
-        binary_data = hex_to_binary(data)
-        self.memory = self.memory[:index] + binary_data + self.memory[index+len(data)]
+    def __setitem__(self, subscript, data):
+        if isinstance(subscript, slice):
+            slice_size = subscript.stop - subscript.start
+            data = data[:slice_size]  # Truncates the data to fit in the slice
+
+            self.memory = self.memory[:subscript.start] + data + [subscript.stop:]
 
     def __str__(self):
         print(self.memory)
@@ -48,7 +51,7 @@ class Chip8:
 
     def move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
-        self.reg_pc += 16  # Instructions are 2 bytes long
+        self.reg_pc += 2  # Instructions are 2 bytes long
 
     def read_nibble_from_addr(self, addr):
         '''Reads 2 bytes from addr.'''
