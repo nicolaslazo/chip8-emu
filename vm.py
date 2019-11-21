@@ -7,7 +7,7 @@ def hex_to_binary(data):
     return bin(int(data, 16))[2:]
 
 def binary_to_hex(data):
-    '''Returns the hexadecimal equivalent of binary data'''
+    '''Returns the hexadecimal equivalent of binary data.'''
     return hex(int(data, 2))[2:]
 
 
@@ -37,7 +37,7 @@ class MemoryBuffer:
         return binary_to_hex(self.memory[addr:addr+16])
 
     def write_nibble_to_addr(self, data, addr):
-        '''Writes 2 bytes to the specified memory address'''
+        '''Writes 2 bytes to the specified memory address.'''
         memory[addr:addr+16] = hex_to_binary(data)
 
 
@@ -68,3 +68,19 @@ class Chip8:
         '''Increases the PC register to point to the next instruction.'''
         self.reg_pc += 2  # Instructions are 2 bytes long
 
+    def push_to_stack(self, value):
+        '''Pushes a value to the stack.'''
+        if self.rg_sp == 15:
+            throw Exception('Full stack.')
+
+        self.reg_sp += 1
+        self.stack[self.reg_sp] = value
+
+    def pop_from_stack(self):
+        '''Pops a value from the stack.'''
+        if self.rg_sp == 0:
+            throw Exception('Empty Stack')
+
+        return_val = self.stack[self.rg_sp]
+        self.rg_sp -= 1
+        return return_val
