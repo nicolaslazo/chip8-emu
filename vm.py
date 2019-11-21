@@ -7,10 +7,19 @@ def data_to_binary(data):
     return bin(int(data, 16))[2:]
 
 
+class MemoryBuffer(program):
+    '''Emulated Chip-8 memory'''
+    def __init__(self, program):
+        self.memory = '0' * 4096
+
+        binary_data = data_to_binary(program)
+        self.memory[512:512+len(binary_data)] = binary_data
+
 class Chip8():
     '''Emulated Chip-8 machine.'''
-    def __init__(self):
-        self.memory = '0' * 4096
+    def __init__(self, program):
+        # Memory buffer
+        self.memory = MemoryBuffer(program)
 
         # Registers
         self.reg_v = [0] * 16
@@ -28,18 +37,3 @@ class Chip8():
 
         # Display
         self.screen = [[0] * 64] * 32
-
-    def load_binary(self, data):
-        '''Loads a string of data unto memory, starting from 0x200.'''
-        self.clear_memory()
-
-        binary_data = data_to_binary(data)
-
-        for (bit_value, bit_position) in enumerate(binary_data, 512):
-            self.memory[bit_position] = str(bit_value)
-
-        breakpoint()
-
-    def clear_memory(self):
-        '''Sets all the memory to zeroes.'''
-        self.memory = '0' * 4096
