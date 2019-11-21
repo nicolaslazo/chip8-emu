@@ -15,6 +15,11 @@ class MemoryBuffer(program):
         binary_data = data_to_binary(program)
         self.memory[512:512+len(binary_data)] = binary_data
 
+    def __setitem__(self, index, data):
+        binary_data = data_to_binary(data)
+        self.memory = self.memory[:index] + binary_data + self.memory[index+len(data)]
+
+
 class Chip8():
     '''Emulated Chip-8 machine.'''
     def __init__(self, program):
