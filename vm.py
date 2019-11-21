@@ -8,7 +8,7 @@ def data_to_binary(data):
 
 
 class MemoryBuffer(program):
-    '''Emulated Chip-8 memory'''
+    '''Emulated Chip-8 memory.'''
     def __init__(self, program):
         self.memory = '0' * 4096
 
@@ -42,3 +42,11 @@ class Chip8():
 
         # Display
         self.screen = [[0] * 64] * 32
+
+    def move_to_next_instruction(self):
+        '''Increases the PC register to point to the next instruction.'''
+        self.reg_pc += 16  # Instructions are 2 bytes long
+
+    def read_nibble_from_addr(self, addr):
+        '''Reads 2 bytes from addr.'''
+        return self.memory[addr:addr+16]
