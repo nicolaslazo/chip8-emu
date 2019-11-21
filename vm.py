@@ -10,7 +10,7 @@ def data_to_binary(data):
 class Chip8():
     '''Emulated Chip-8 machine.'''
     def __init__(self):
-        self.memory = [0] * 4096
+        self.memory = '0' * 4096
 
         # Registers
         self.reg_v = [0] * 16
@@ -35,9 +35,11 @@ class Chip8():
 
         binary_data = data_to_binary(data)
 
-        for bit_position in binary_data:
-            self.memory[512 + bit_position] = int(binary_data[bit_position])
+        for (bit_value, bit_position) in enumerate(binary_data, 512):
+            self.memory[bit_position] = str(bit_value)
+
+        breakpoint()
 
     def clear_memory(self):
         '''Sets all the memory to zeroes.'''
-        self.memory = [0] * 4096
+        self.memory = '0' * 4096
