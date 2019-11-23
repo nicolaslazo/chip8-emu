@@ -31,12 +31,12 @@ class MemoryBuffer:
     def __str__(self):
         print(self.memory)
 
-    def read_nibble_from_addr(self, addr):
+    def read_word_from_addr(self, addr):
         '''Reads 2 bytes from addr.'''
         addr = int(addr, 16)
         return binary_to_hex(self.memory[addr:addr+16])
 
-    def write_nibble_to_addr(self, data, addr):
+    def write_word_to_addr(self, data, addr):
         '''Writes 2 bytes to the specified memory address.'''
         memory[addr:addr+16] = hex_to_binary(data)
 
@@ -66,7 +66,7 @@ class Chip8:
 
     def move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
-        self.reg_pc += 2  # Instructions are 2 bytes long
+        self.reg_pc += 16  # Instructions are 2 bytes long
 
     def push_to_stack(self, value):
         '''Pushes a value to the stack.'''
@@ -84,3 +84,9 @@ class Chip8:
         return_val = self.stack[self.rg_sp]
         self.rg_sp -= 1
         return return_val
+
+    def execute_instruction(self, instruction):
+        '''
+        Given the instruction xyzw, calls the function instruction_x with yzw as an argument. Serves as an instruction search tree
+        '''
+        self.instruction_function[instruction[0]](instruction[1:])
