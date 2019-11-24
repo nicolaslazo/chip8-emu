@@ -6,6 +6,7 @@ def hex_to_binary(data):
     '''Returns the binary equivalent of hexadecimal data.'''
     return bin(int(data, 16))[2:]
 
+
 def binary_to_hex(data):
     '''Returns the hexadecimal equivalent of binary data.'''
     return hex(int(data, 2))[2:]
@@ -17,7 +18,7 @@ class MemoryBuffer:
         self.memory = '0' * 4096
 
         binary_data = hex_to_binary(program)
-        self[512] = binary_data
+        self.memory[512] = binary_data
 
     def __setitem__(self, subscript, data):
         if isinstance(subscript, slice):
@@ -38,7 +39,7 @@ class MemoryBuffer:
 
     def write_word_to_addr(self, data, addr):
         '''Writes 2 bytes to the specified memory address.'''
-        memory[addr:addr+16] = hex_to_binary(data)
+        self.memory[addr:addr+16] = hex_to_binary(data)
 
 
 class Chip8:
@@ -87,14 +88,15 @@ class Chip8:
     # Opcode implementations
     def execute_instruction(self, instruction):
         '''
-        Given the instruction xyzw, calls the function instruction_x with yzw as an argument. Serves as a way to call a search tree.
+        Given the instruction xyzw, calls the function instruction_x with yzw as an argument.
+        Serves as a way to call a search tree.
         '''
         self.instruction_category[instruction[0]](instruction[1:])
 
     def instruction_0(self, arg):
         '''Redirects to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
         if arg == '0e0':
-            self.instruction_00e0() 
+            self.instruction_00e0()
         elif arg == '0ee':
             self.instruction_00ee()
         else:
@@ -109,9 +111,10 @@ class Chip8:
         return_address = self.pop_from_stack()
         self.reg_pc = return_address
 
-    def instruction_0nnn(addr):
+    def instruction_0nnn(self, addr):
         '''Instruction 0nnn [SYS addr].'''
-        self.reg_pc = int(addr)  # This instruction is supposedly ignored by modern interpreters so I might delete it later
+        # This instruction is supposedly ignored by modern interpreters so I might delete it later
+        self.reg_pc = int(addr)
 
     def instruction_1(self, addr):
         '''Instruction 1nnn [JP addr].'''
@@ -204,7 +207,7 @@ class Chip8:
         self.reg_v[x] -= self.reg_v[y]
 
         if x > y:
-            self.reg_v[15] = 1 
+            self.reg_v[15] = 1
         else:
             self.reg_v[15] = 0
 
@@ -214,7 +217,7 @@ class Chip8:
 
     def push_to_stack(self, value):
         '''Pushes a value to the stack.'''
-        if self.rg_sp == 15:
+        if self.reg_sp == 15:
             raise Exception('Full stack.')
 
         self.reg_sp += 1
@@ -222,9 +225,9 @@ class Chip8:
 
     def pop_from_stack(self):
         '''Pops a value from the stack.'''
-        if self.rg_sp == 0:
+        if self.reg_sp == 0:
             raise Exception('Empty Stack')
 
-        return_val = self.stack[self.rg_sp]
-        self.rg_sp -= 1
+        return_val = self.stack[self.reg_sp]
+        self.reg_sp -= 1
         return return_val
