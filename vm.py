@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 '''This module contains the Chip-8 class and its opcodes.'''
 
+from random import randint
+
 
 def hex_to_binary(data):
     '''Returns the binary equivalent of hexadecimal data.'''
@@ -173,7 +175,7 @@ class Chip8:
         }
 
         (x, y, instruction_byte) = arg
-        x = int(x); y = int(y)
+        x = int(x, 16); y = int(y, 16)
         functions[instruction_byte](x, y)
 
     def instruction_8xy0(self, x, y):
@@ -204,12 +206,64 @@ class Chip8:
 
     def instruction_8xy5(self, x, y):
         '''Instruction 8xy5 [SUB Vx, Vy].'''
-        self.reg_v[x] -= self.reg_v[y]
-
-        if x > y:
+        # Set VF to NOT borrow
+        if self.reg_v[x] > self.reg_v[y]:
             self.reg_v[15] = 1
         else:
             self.reg_v[15] = 0
+
+        self.reg_v[x] -= self.reg_v[y]
+
+    def instruction_8xy6(self, x, y):
+        '''Instruction 8xy6 [SHR Vx {, Vy}].'''
+        # Check if the least-significant bit is 1
+        if self.reg_v[x] % 2:
+            self.reg_v[15] = 1
+        else:
+            self.reg_v[15] = 0
+
+        self.reg_v[x] /= 2
+
+    def instruction_8xy7(self, x, y):
+        '''Instruction 8xy7 [SUBN Vx, Vy].'''
+        # Set VF to NOT borrow
+        if self.reg_v[y] > self.reg_v[x]:
+            self.reg_v[15] = 1
+        else:
+            self.reg_v[15] = 0
+
+        self.reg_v[x] = self.reg_v[y] - self.reg_v[x]
+
+    def instruction_8xyE(self, x, y):
+        '''Instruction 8xyE [SHL Vx {, Vy}].'''
+        # Check if there's overflow
+        if bin(x)[2] == '1':
+            self.reg_v[15] = 1
+        else:
+            self.reg_v[15] = 0
+
+        self.reg_v[x] *= 2
+
+    def instruction_9(self, arg):
+        '''Instruction 9xy0 [SNE Vx, Vy].'''
+        [x, y, _] = arg
+
+        if x != y:
+            self.move_to_next_instruction()
+
+    def instruction_a(self, arg):
+        '''Instruction Annn [LD I, addr].'''
+        self.reg_i = int(arg, 16)
+
+    def instruction_b(self, arg):
+        '''Instruction Bnnn [JP V0, addr].'''
+        self.reg_pc = self.reg_v[0] + int(addr, 16)
+
+    def instruction_c(self, arg):
+        '''Instruction Cxkk [RND Vx, byte].'''
+        x = int(arg[0], 16); kk = int(arg[1:], 16)
+        self.reg_v[x] = randint(0, 255) & int(kk)
+        
 
     def move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
