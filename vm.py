@@ -262,8 +262,42 @@ class Chip8:
     def instruction_c(self, arg):
         '''Instruction Cxkk [RND Vx, byte].'''
         x = int(arg[0], 16); kk = int(arg[1:], 16)
-        self.reg_v[x] = randint(0, 255) & int(kk)
+        self.reg_v[x] = randint(0, 255) & int(kk, 16)
         
+    def instruction_d(self, arg):
+        '''Instruction Dxyn [DRW Vx, Vy, nibble].'''
+        [x, y, bytes_to_read] = arg
+        x = int(x, 16)
+        y = int(y, 16)
+        bytes_to_read = int(bytes_to_read, 16)
+
+        sprite = self.memory.read_bytes_from_addr(self.reg_i, bytes_to_read)
+
+        self.reg_v[15] = self.scr.check_collission(self.reg_v[x], self.reg_v[y], sprite)
+
+        self.scr.draw_sprite(self.reg_v[x], self.reg_v[y], sprite)
+
+    def instruction_e(self, arg):
+        '''Redirects to either [SKP Vx] or [SKNP Vx].'''
+        x = int(arg[0], 16)
+        last_byte = arg[1:]
+
+        if last_byte == '9e':
+            self.instruction_Ex9E(self, x)
+        elif last_byte == 'a1':
+            self.instruction_ExA1(self, x)
+        else:
+            raise Exception('9xXX instruction not recognised.')
+
+    def instruction_Ex9E(self, x):
+        '''Instruction Ex9E [SKP Vx].'''
+        if self.scr.key_pressed(self.reg_v[x]):
+            self.move_to_next_instruction()
+
+    def instruction_ExA1(self, x):
+        '''Instruction ExA1 [SKNP Vx].'''
+        if not self.scr.key_pressed(self.reg_v[x]):
+            self.move_to_next_instruction()
 
     def move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
