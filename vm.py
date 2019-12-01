@@ -15,9 +15,16 @@ def binary_to_hex(data):
 
 
 class MemoryBuffer:
-    '''Emulated Chip-8 memory.'''
-    def __init__(self, program):
+    '''Emulated Chip-8 memory.
+
+    Parameters:
+    io_manager: Audio and video manager class
+    program: Chip-8 binary in binary string format
+    '''
+    def __init__(self, io_manager, program):
         self.memory = '0' * 4096
+
+        self.io_manager = io_manager
 
         binary_data = hex_to_binary(program)
         self.memory[512] = binary_data
@@ -64,9 +71,6 @@ class Chip8:
         # Keyboard input
         self.keyboard_input = 0
 
-        # Display
-        self.screen = [[0] * 64] * 32
-
         # Opcode categories
         self.instruction_category = {
             '0': self.instruction_0,
@@ -106,7 +110,7 @@ class Chip8:
 
     def instruction_00e0(self):
         '''Instruction 00E0 [CLS].'''
-        self.screen = [[0] * 64] * 32
+        self.io_manager.video.clear_screen()
 
     def instruction_00ee(self):
         '''Instruction 00EE [RET].'''
