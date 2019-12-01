@@ -16,10 +16,8 @@ def binary_to_hex(data):
 
 class MemoryBuffer:
     '''Emulated Chip-8 memory.'''
-    def __init__(self, io_manager, program):
+    def __init__(self, program):
         self.memory = '0' * 4096
-
-        self.io_manager = io_manager
 
         binary_data = hex_to_binary(program)
         self.memory[512] = binary_data
@@ -37,13 +35,29 @@ class MemoryBuffer:
         print(self.memory)
 
     def read_word_from_addr(self, addr):
-        '''Reads 2 bytes from addr.'''
+        '''Reads 2 bytes from the specified memory address.'''
+        return self._read_data_from_addr(addr, 16)
+
+    def read_byte_from_addr(self, addr):
+        '''Reads 1 byte from the specified memory address.'''
+        return self._read_data_from_addr(addr, 8)
+
+    def _read_data_from_addr(self, addr, bits):
+        '''Reads n bits from the specified memory address.'''
         addr = int(addr, 16)
-        return binary_to_hex(self.memory[addr:addr+16])
+        return binary_to_hex(self.memory[addr:addr+bits])
 
     def write_word_to_addr(self, data, addr):
         '''Writes 2 bytes to the specified memory address.'''
-        self.memory[addr:addr+16] = hex_to_binary(data)
+        self._write_data_to_addr(data, addr, 16)
+
+    def write_byte_to_addr(self, data, addr):
+        '''Writes 1 byte to the specified memory address.'''
+        self._write_data_to_addr(data, addr, 8)
+
+    def _write_data_to_addr(self, data, addr, bits):
+        '''Writes n bits to the specified memory address.'''
+        self.memory[addr:addr+bits] = hex_to_binary(data)
 
 
 class Chip8:
@@ -54,7 +68,7 @@ class Chip8:
     program: Chip-8 binary in binary string format
 
     '''
-    def __init__(self, program):
+    def __init__(self, program, io_manager):
         # Memory buffer
         self.memory = MemoryBuffer(program)
 
@@ -69,8 +83,8 @@ class Chip8:
         # Stack
         self.stack = [0] * 16
 
-        # Keyboard input
-        self.keyboard_input = 0
+        # Audio, video, input manager
+        self.io_manager = io_manager
 
         # Opcode categories
         self.instruction_category = {
@@ -303,6 +317,72 @@ class Chip8:
         '''Instruction ExA1 [SKNP Vx].'''
         if not self.scr.key_pressed(self.reg_v[x]):
             self.move_to_next_instruction()
+
+    def instruction_f(self, arg):
+        '''Redirects to all instructions starting with the F nibble.'''
+        functions = {
+            '07': self.instruction_Fx07,
+            '0A': self.instruction_Fx0A,
+            '15': self.instruction_Fx15,
+            '18': self.instruction_Fx18,
+            '1E': self.instruction_Fx1E,
+            '29': self.instruction_Fx29,
+            '33': self.instruction_Fx33,
+            '55': self.instruction_Fx55,
+            '65': self.instruction_Fx65
+        }
+
+        x = int(arg[0], 16)
+        last_byte = arg[1:]
+
+        functions[last_byte](x)
+
+    def instruction_Fx07(self, x):
+        '''Instruction Fx07 [LD Vx, DT].'''
+        #TODO
+        pass
+
+    def instruction_Fx0A(self, x):
+        '''Instruction Fx0A [LD Vx, K].'''
+        #TODO
+        pass
+
+    def instruction_Fx15(self, x):
+        '''Instruction Fx15 [LD DT, Vx].'''
+        #TODO
+        pass
+
+    def instruction_Fx18(self, x):
+        '''Instruction Fx18 [LD ST, Vx].'''
+        #TODO
+        pass
+
+    def instruction_Fx1E(self, x):
+        '''Instruction Fx1E [ADD I, Vx].'''
+        self.reg_i += self.reg_v[x]
+
+    def instruction_Fx29(self, x):
+        '''Instruction Fx29 [LD F, Vx].'''
+        #TODO
+        pass
+
+    def instruction_Fx33(self, x):
+        '''Instruction Fx33 [LD B, Vx].'''
+        i_addr = self.reg_i
+
+        self.memory.write_word_to_addr((x // 100) % 10, i_addr)
+        self.memory.write_word_to_addr((x // 10) % 10, i_addr + 16)
+        self.memory.write_word_to_addr(x % 10, i_addr + 32)
+
+    def instruction_Fx55(self, x):
+        '''Instruction Fx55 [LD [I], Vx].'''
+        for register_number in range(x):
+            self.memory.write_byte_to_addr(self.reg_v[register_number], reg_i + 8 * register_number)
+
+    def instruction_Fx65(self, x):
+        '''Instruction Fx65 [LD Vx, [I]].'''
+        for register_number in range(x):
+            self.reg_v[register_number] = memory.read_byte_from_addr(self.reg_i + 8 * register_number)
 
     def move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
