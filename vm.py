@@ -15,12 +15,7 @@ def binary_to_hex(data):
 
 
 class MemoryBuffer:
-    '''Emulated Chip-8 memory.
-
-    Parameters:
-    io_manager: Audio and video manager class
-    program: Chip-8 binary in binary string format
-    '''
+    '''Emulated Chip-8 memory.'''
     def __init__(self, io_manager, program):
         self.memory = '0' * 4096
 
@@ -52,7 +47,13 @@ class MemoryBuffer:
 
 
 class Chip8:
-    '''Emulated Chip-8 machine.'''
+    '''Emulated Chip-8 machine.
+
+    Parameters:
+    io_manager: Audio and video manager class
+    program: Chip-8 binary in binary string format
+
+    '''
     def __init__(self, program):
         # Memory buffer
         self.memory = MemoryBuffer(program)
