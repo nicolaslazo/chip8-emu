@@ -1,3 +1,6 @@
+#!/usr/bin/env python3
+'''This module contains the classes that manage the input/output operations of a Chip-8 virtual machine.'''
+
 from asciimatics.screen import Screen
 
 
