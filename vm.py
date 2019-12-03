@@ -14,52 +14,6 @@ def binary_to_hex(data):
     return hex(int(data, 2))[2:]
 
 
-class MemoryBuffer:
-    '''Emulated Chip-8 memory.'''
-    def __init__(self, program):
-        self.memory = '0' * 4096
-
-        binary_data = hex_to_binary(program)
-        self.memory[512] = binary_data
-
-    def __setitem__(self, subscript, data):
-        if isinstance(subscript, slice):
-            slice_size = subscript.stop - subscript.start
-            data = data[:slice_size]  # Truncates the data to fit in the slice
-
-            self.memory = self.memory[:subscript.start] + data + self.memory[subscript.stop:]
-        else:
-            self.memory = self.memory[:subscript] + data + self.memory[subscript+1:]
-
-    def __str__(self):
-        print(self.memory)
-
-    def read_word_from_addr(self, addr):
-        '''Reads 2 bytes from the specified memory address.'''
-        return self._read_data_from_addr(addr, 16)
-
-    def read_byte_from_addr(self, addr):
-        '''Reads 1 byte from the specified memory address.'''
-        return self._read_data_from_addr(addr, 8)
-
-    def _read_data_from_addr(self, addr, bits):
-        '''Reads n bits from the specified memory address.'''
-        addr = int(addr, 16)
-        return binary_to_hex(self.memory[addr:addr+bits])
-
-    def write_word_to_addr(self, data, addr):
-        '''Writes 2 bytes to the specified memory address.'''
-        self._write_data_to_addr(data, addr, 16)
-
-    def write_byte_to_addr(self, data, addr):
-        '''Writes 1 byte to the specified memory address.'''
-        self._write_data_to_addr(data, addr, 8)
-
-    def _write_data_to_addr(self, data, addr, bits):
-        '''Writes n bits to the specified memory address.'''
-        self.memory[addr:addr+bits] = hex_to_binary(data)
-
-
 class Chip8:
     '''Emulated Chip-8 machine.
 
@@ -84,7 +38,7 @@ class Chip8:
         self.stack = [0] * 16
 
         # Audio, video, input manager
-        self.io_manager = io_manager
+        self.io_manager = io_manager.init()
 
         # Opcode categories
         self._instruction_category = {
@@ -106,8 +60,12 @@ class Chip8:
             'f': self._instruction_F
         }
 
+    def run(self):
+        while True:
+            pass
+
     # Opcode implementations
-    def execute_instruction(self, instruction):
+    def _execute_instruction(self, instruction):
         '''
         Given the instruction xyzw, calls the function _instruction_x with yzw as an argument.
         Serves as a way to call a search tree.
@@ -404,3 +362,49 @@ class Chip8:
         return_val = self.stack[self.reg_sp]
         self.reg_sp -= 1
         return return_val
+
+
+class MemoryBuffer:
+    '''Emulated Chip-8 memory.'''
+    def __init__(self, program):
+        self.memory = '0' * 4096
+
+        binary_data = hex_to_binary(program)
+        self.memory[512] = binary_data
+
+    def __setitem__(self, subscript, data):
+        if isinstance(subscript, slice):
+            slice_size = subscript.stop - subscript.start
+            data = data[:slice_size]  # Truncates the data to fit in the slice
+
+            self.memory = self.memory[:subscript.start] + data + self.memory[subscript.stop:]
+        else:
+            self.memory = self.memory[:subscript] + data + self.memory[subscript+1:]
+
+    def __str__(self):
+        print(self.memory)
+
+    def read_word_from_addr(self, addr):
+        '''Reads 2 bytes from the specified memory address.'''
+        return self._read_data_from_addr(addr, 16)
+
+    def read_byte_from_addr(self, addr):
+        '''Reads 1 byte from the specified memory address.'''
+        return self._read_data_from_addr(addr, 8)
+
+    def _read_data_from_addr(self, addr, bits):
+        '''Reads n bits from the specified memory address.'''
+        addr = int(addr, 16)
+        return binary_to_hex(self.memory[addr:addr+bits])
+
+    def write_word_to_addr(self, data, addr):
+        '''Writes 2 bytes to the specified memory address.'''
+        self._write_data_to_addr(data, addr, 16)
+
+    def write_byte_to_addr(self, data, addr):
+        '''Writes 1 byte to the specified memory address.'''
+        self._write_data_to_addr(data, addr, 8)
+
+    def _write_data_to_addr(self, data, addr, bits):
+        '''Writes n bits to the specified memory address.'''
+        self.memory[addr:addr+bits] = hex_to_binary(data)
