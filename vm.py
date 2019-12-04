@@ -151,9 +151,9 @@ class Chip8:
             'e': self._instruction_8xyE
         }
 
-        (x, y, instruction_byte) = arg
+        (x, y, instruction_nibble) = arg
         x = int(x, 16); y = int(y, 16)
-        functions[instruction_byte](x, y)
+        functions[instruction_nibble](x, y)
 
     def _instruction_8xy0(self, x, y):
         '''Instruction 8xy0 [LD Vx, Vy].'''
@@ -264,7 +264,7 @@ class Chip8:
         elif last_byte == 'a1':
             self._instruction_ExA1(self, x)
         else:
-            raise Exception('9xXX instruction not recognised.')
+            raise Exception('ExXX instruction not recognised.')
 
     def _instruction_Ex9E(self, x):
         '''Instruction Ex9E [SKP Vx].'''
