@@ -2,7 +2,6 @@
 '''This module is the main body of the emulator.'''
 
 from sys import argv
-from binascii import hexlify
 from vm import Chip8
 from iomanager import IOManager
 
@@ -11,7 +10,7 @@ def load_rom(input_file):
     '''Loads ROM file from the command line.'''
     try:
         with open(input_file, 'rb') as rom_file:
-            return hexlify(rom_file.read())
+            return rom_file.read().hex().upper()
     except IOError:
         print("Error: file not found")
         exit(1)

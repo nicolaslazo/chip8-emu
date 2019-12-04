@@ -5,12 +5,12 @@ from asciimatics.screen import Screen
 
 
 class IOManager:
-    def __init__():
+    def __init__(self):
         self.input = InputManager()
         self.screen = VideoManager()
         self.audio = AudioManager()
 
-    def init():
+    def init(self):
         self.input.init()
         self.screen.init()
         self.audio.init()
