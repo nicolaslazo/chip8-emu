@@ -52,8 +52,13 @@ class Chip8:
 
     def run(self):
         '''Emulates the execution of a Chip-8 program.'''
-        while True:
-            pass
+        while True:  # TODO: find an execution endpoint
+            to_execute = self.read_word_from_addr(self.reg_pc)
+            _execute_instruction(to_execute)
+
+            io_manager.video.refresh_display()
+
+            self._move_to_next_instruction()
 
     # Opcode implementations
     def _execute_instruction(self, instruction):
@@ -332,7 +337,7 @@ class Chip8:
         for register_number in range(x):
             self.reg_v[register_number] = self.memory.read_byte_from_addr(self.reg_i + register_number)
 
-    def move_to_next_instruction(self):
+    def _move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
         self.reg_pc += 2  # Instructions are 2 bytes long
 
