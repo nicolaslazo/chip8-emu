@@ -369,8 +369,9 @@ class MemoryBuffer:
     def __init__(self, program):
         self.memory = '0' * 4096
 
-        binary_data = hex_to_binary(program)
-        self.memory[512] = binary_data
+        program_size_in_bytes = len(program) / 2
+
+        self.memory[512:512+program_size_in_bytes] = program
 
     def __setitem__(self, subscript, data):
         if isinstance(subscript, slice):
