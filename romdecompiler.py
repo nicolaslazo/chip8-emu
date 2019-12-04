@@ -192,10 +192,9 @@ def _instruction_F(arg):
         '65': _instruction_Fx65
     }
 
-    x = int(arg[0], 16)
     last_byte = arg[1:]
 
-    return functions[last_byte](x)
+    return functions[last_byte](arg[0])
 
 
 def _instruction_Fx07(x):

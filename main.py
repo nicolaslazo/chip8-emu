@@ -10,7 +10,7 @@ def load_rom(input_file):
     '''Loads ROM file from the command line.'''
     try:
         with open(input_file, 'rb') as rom_file:
-            return rom_file.read().hex()
+            return rom_file.read().hex().upper()
     except IOError:
         print("Error: file not found")
         exit(1)
