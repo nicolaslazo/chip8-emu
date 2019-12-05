@@ -297,23 +297,20 @@ class Chip8:
 
     def _instruction_Fx07(self, x):
         '''Instruction Fx07 [LD Vx, DT].'''
-        # TODO
-        pass
+        self.reg_v[x] = self.reg_dt.value
 
     def _instruction_Fx0A(self, x):
         '''Instruction Fx0A [LD Vx, K].'''
-        # TODO
-        pass
+        self.reg_v[x] = self.io_manager.input.wait_for_input()
 
     def _instruction_Fx15(self, x):
         '''Instruction Fx15 [LD DT, Vx].'''
-        # TODO
-        pass
+        self.reg_dt.set_value(self.reg_v[x])
 
     def _instruction_Fx18(self, x):
         '''Instruction Fx18 [LD ST, Vx].'''
-        # TODO
-        pass
+        self.reg_st.set_value(self.reg_v[x])
+        self.io_manager.audio.play_tone(self.reg_v[x)
 
     def _instruction_Fx1E(self, x):
         '''Instruction Fx1E [ADD I, Vx].'''

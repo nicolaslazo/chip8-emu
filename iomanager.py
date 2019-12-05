@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 '''This module contains the classes that manage the input/output operations of a Chip-8 virtual machine.'''
 
+import json
 from asciimatics.screen import Screen
 
 
@@ -23,18 +24,17 @@ class IOManager:
 
 class InputManager:
     def __init__(self):
-        pass
-
-    def init(self):
-        pass
+        self._load_key_bindings_config()
 
     def wait_for_input(self):
+        '''Stops execution until a key is pressed.'''
         key_pressed = self.screen.wait_for_input()
 
         return key_binding[key_pressed]
 
     def _load_key_bindings_config(self):
-        self.key_bindings = json.loads
+        with open('key_bindings.json') as CONFIG_FILE:
+            self.key_bindings = json.load(CONFIG_FILE)
 
 
 class VideoManager:
@@ -50,4 +50,7 @@ class AudioManager:
         pass
 
     def init(self):
+        pass
+
+    def play_tone(self):
         pass
