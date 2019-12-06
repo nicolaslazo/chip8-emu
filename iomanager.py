@@ -5,6 +5,11 @@ import json
 from asciimatics.screen import Screen
 
 
+def hex_to_binary(hex_value):
+    binary_length = len(hex_value) * 4
+    return (bin(int(h, 16))[2:]).zfill(binary_length)
+
+
 class IOManager:
     def __init__(self):
         self.input = InputManager()
@@ -15,11 +20,6 @@ class IOManager:
         self.input.init()
         self.screen.init()
         self.audio.init()
-
-    def _draw_screen(self, screen):
-        for y_coord in range(32):
-            for x_coord in range(64):
-                screen.print_at(self.screen_buffer[y_coord][x_coord], x_coord, y_coord)
 
 
 class InputManager:
@@ -39,18 +39,28 @@ class InputManager:
 
 class VideoManager:
     def __init__(self):
-        pass
+        self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
+        self._display_lock = Lock()
 
     def init(self):
-        pass
+        Screen.wrapper(self.run)
+
+    def run(self, screen):
+        while True:
+            with self._display_lock:
+                self._draw_screen(screen)
+
+    def draw_sprite(self, sprite, pos_x, pos_y):
+        if self._sprite_overflows(sprite, pos_x):
+            self.draw_sprite()
+
+    def _draw_screen(self, screen):
+        for coord_y in range(32):
+            for coord_x in range(64):
+                if self.display_buffer[coord_y][coord_x] == '1':
+                    screen.print_at('X', coord_x, coord_y)
 
 
 class AudioManager:
-    def __init__(self):
-        pass
-
     def init(self):
-        pass
-
-    def play_tone(self):
-        pass
+        pass  # Empty until I figure out how to play a single tone with Python on a Windows WSL
