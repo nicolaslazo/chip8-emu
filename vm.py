@@ -310,7 +310,7 @@ class Chip8:
     def _instruction_Fx18(self, x):
         '''Instruction Fx18 [LD ST, Vx].'''
         self.reg_st.set_value(self.reg_v[x])
-        self.io_manager.audio.play_tone(self.reg_v[x)
+        self.io_manager.audio.play_tone(self.reg_v[x])
 
     def _instruction_Fx1E(self, x):
         '''Instruction Fx1E [ADD I, Vx].'''
