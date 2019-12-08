@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 '''This module contains the classes that manage the input/output operations of a Chip-8 virtual machine.'''
 
 import json
@@ -23,13 +23,16 @@ class VideoManager:
         self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
         self._display_lock = threading.Lock()
 
+        self.start_display_thread()
+
+    def start_display_thread(self):
         self.screen = Screen.wrapper(self.run)
         self.screen.clear()
 
-    def run(self):
+    def run(self, screen):
         while True:
             with self._display_lock:
-                self._draw_screen(self.screen)
+                self._draw_screen(self.display_buffer)
 
     def draw_sprite(self, sprite, pos_x, pos_y):
         sprite = list(hex_to_binary(sprite))

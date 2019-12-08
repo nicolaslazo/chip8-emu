@@ -318,8 +318,7 @@ class Chip8:
 
     def _instruction_Fx29(self, x):
         '''Instruction Fx29 [LD F, Vx].'''
-        # TODO
-        pass
+        self.reg_i = self.memory.find_sprite_address(self.reg_v[x])
 
     def _instruction_Fx33(self, x):
         '''Instruction Fx33 [LD B, Vx].'''

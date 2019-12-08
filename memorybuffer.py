@@ -26,6 +26,14 @@ class MemoryBuffer:
     def __str__(self):
         print(self.memory)
 
+    def find_sprite_address(self, hex_digit):
+        '''Returns the memory address in which the sprite data is located.'''
+        return self.sprite_memory_space().index(hex_digit)
+
+    def sprite_memory_space(self):
+        '''Returns the section of the memory space dedicated to sprite storage.'''
+        return self.memory[:512]
+
     def read_word_from_addr(self, addr):
         '''Reads 2 bytes from the specified memory address.'''
         return self.read_data_from_addr(addr, 2)
