@@ -5,6 +5,21 @@ from random import randint
 from memorybuffer import MemoryBuffer
 from timer import Timer
 
+
+def nnn_format_to_xkk(arg):
+    arg_x = arg & 0xF00 >> 8
+    arg_kk = arg & 0x0FF
+
+    return (arg_x, arg_kk)
+
+def nnn_format_to_xyn(arg):
+    arg_x = arg & 0xF00 >> 8
+    arg_y = arg & 0x0F0 >> 4
+    arg_n = arg & 0x00F
+
+    return (arg_x, arg_y, arg_n)
+
+
 class Chip8:
     '''Emulated Chip-8 machine.
 
@@ -36,24 +51,24 @@ class Chip8:
         self.io_manager = io_manager.init()
 
         # Opcode categories
-        self._instruction_category = {
-            '0': self._instruction_0,
-            '1': self._instruction_1,
-            '2': self._instruction_2,
-            '3': self._instruction_3,
-            '4': self._instruction_4,
-            '5': self._instruction_5,
-            '6': self._instruction_6,
-            '7': self._instruction_7,
-            '8': self._instruction_8,
-            '9': self._instruction_9,
-            'A': self._instruction_A,
-            'B': self._instruction_B,
-            'C': self._instruction_C,
-            'D': self._instruction_D,
-            'E': self._instruction_E,
-            'F': self._instruction_F
-        }
+        self._instruction_lookup = [
+            self._instruction_0,
+            self._instruction_1,
+            self._instruction_2,
+            self._instruction_3,
+            self._instruction_4,
+            self._instruction_5,
+            self._instruction_6,
+            self._instruction_7,
+            self._instruction_8,
+            self._instruction_9,
+            self._instruction_A,
+            self._instruction_B,
+            self._instruction_C,
+            self._instruction_D,
+            self._instruction_E,
+            self._instruction_F
+        ]
 
     def run(self):
         '''Emulates the execution of a Chip-8 program.'''
@@ -71,13 +86,17 @@ class Chip8:
         Given the instruction xyzw, calls the function _instruction_x with yzw as an argument.
         Serves as a way to call a search tree.
         '''
-        self._instruction_category[instruction[0]](instruction[1:])
+        instruction_int = int(instruction, 16)
+        instruction_category = instruction_int & 0xF000 >> 12
+        instruction_argument = instruction_int & 0x0FFF
+
+        self._instruction_lookup[instruction_category](instruction_argument)
 
     def _instruction_0(self, arg):
         '''Redirects to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
-        if arg == '0E0':
+        if arg == 0x00E0:
             self._instruction_00E0()
-        elif arg == '0EE':
+        elif arg == 0x00EE:
             self._instruction_00EE()
         else:
             self._instruction_0nnn(arg)
@@ -94,62 +113,57 @@ class Chip8:
     def _instruction_0nnn(self, addr):
         '''Instruction 0nnn [SYS addr].'''
         # This instruction is supposedly ignored by modern interpreters so I might delete it later
-        self.reg_pc = int(addr, 16)
+        self.reg_pc = addr
 
     def _instruction_1(self, addr):
         '''Instruction 1nnn [JP addr].'''
-        self.reg_pc = int(addr, 16)
+        self.reg_pc = addr
 
     def _instruction_2(self, addr):
         '''Instruction 2nnn [CALL addr].'''
         self.push_to_stack(self.reg_pc)
-        self.reg_pc = int(addr, 16)
+        self.reg_pc = addr
 
     def _instruction_3(self, arg):
         '''Instruction 3xkk [SE Vx, byte].'''
-        (x, kk) = (arg[0], arg[1:])
-        (x, kk) = (int(x, 16), int(kk, 16))
-        if self.reg_v[x] == kk:
+        (arg_x, arg_kk) = nnn_format_to_xkk(arg)
+        if self.reg_v[arg_x] == arg_kk:
             self.move_to_next_instruction()
 
     def _instruction_4(self, arg):
         '''Instruction 4xkk [SNE Vx, byte].'''
-        (x, kk) = (arg[0], arg[1:])
-        (x, kk) = (int(x, 16), int(kk, 16))
-        if self.reg_v[x] != kk:
+        (arg_x, arg_kk) = nnn_format_to_xkk(arg)
+        if self.reg_v[arg_x] != arg_kk:
             self.move_to_next_instruction()
 
     def _instruction_5(self, arg):
         '''Instruction 5xy0 [SE Vx, Vy].'''
-        (x, y, _) = arg  # Last nibble is not checked to be zero from now, will change if needed
-        (x, y) = (int(x), int(y))
-        if self.reg_v[x] == self.reg_v[y]:
+        (arg_x, arg_y, _) = nnn_format_to_xyn(arg)  # Last nibble is not checked to be zero from now, will change if needed
+        if self.reg_v[arg_x] == self.reg_v[arg_y]:
             self.move_to_next_instruction()
 
     def _instruction_6(self, arg):
         '''Instruction 6xkk [LD Vx, byte].'''
-        (x, kk) = (arg[0], arg[1:])
-        (x, kk) = (int(x, 16), int(kk, 16))
-        self.reg_v[x] = kk
+        (arg_x, arg_kk) = nnn_format_to_xkk(arg)
+        self.reg_v[arg_x] = arg_kk
 
     def _instruction_7(self, arg):
         '''Instruction 7xkk [ADD Vx, byte].'''
-        (x, kk) = (arg[0], arg[1:])
-        (x, kk) = (int(x, 16), int(kk, 16))
-        self.reg_v[x] += kk
+        (arg_x, arg_kk) = nnn_format_to_xkk(arg)
+        self.reg_v[arg_x] += arg_kk
 
     def _instruction_8(self, arg):
         '''Redirects to 8xy[0-7] and 8xyE.'''
         functions = {
-            '0': self._instruction_8xy0,
-            '1': self._instruction_8xy1,
-            '2': self._instruction_8xy2,
-            '3': self._instruction_8xy3,
-            '4': self._instruction_8xy4,
-            '5': self._instruction_8xy5,
-            '6': self._instruction_8xy6,
-            '7': self._instruction_8xy7,
-            'e': self._instruction_8xyE
+                0x0:self._instruction_8xy0,
+                0x1:self._instruction_8xy1,
+                0x2:self._instruction_8xy2,
+            0x3self._instruction_8xy3,
+            0x4self._instruction_8xy4,
+            0x5self._instruction_8xy5,
+            0x6self._instruction_8xy6,
+            0x7self._instruction_8xy7,
+            0xEself._instruction_8xyE
         }
 
         (x, y, instruction_nibble) = arg
