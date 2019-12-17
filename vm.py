@@ -286,7 +286,7 @@ class Chip8:
 
     def _instruction_F(self, arg):
         '''Redirects to all instructions starting with the F nibble.'''
-        funcxtions = {
+        functions = {
             0x07: self._instruction_Fx07,
             0x0A: self._instruction_Fx0A,
             0x15: self._instruction_Fx15,
