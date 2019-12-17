@@ -7,12 +7,14 @@ from timer import Timer
 
 
 def nnn_format_to_xkk(arg):
+    '''Separates a 12-bit fuction argument into 4-bit and 8-bit arguments.'''
     arg_x = arg & 0xF00 >> 8
     arg_kk = arg & 0x0FF
 
     return (arg_x, arg_kk)
 
 def nnn_format_to_xyn(arg):
+    '''Separates a 12-bit function argument into three 4-bit arguments.'''
     arg_x = arg & 0xF00 >> 8
     arg_y = arg & 0x0F0 >> 4
     arg_n = arg & 0x00F
@@ -76,7 +78,7 @@ class Chip8:
             to_execute = self.memory.read_word_from_addr(self.reg_pc)
             self._execute_instruction(to_execute)
 
-            io_manager.video.refresh_display()
+            self.io_manager.video.refresh_display()
 
             self._move_to_next_instruction()
 
@@ -128,19 +130,20 @@ class Chip8:
         '''Instruction 3xkk [SE Vx, byte].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
         if self.reg_v[arg_x] == arg_kk:
-            self.move_to_next_instruction()
+            self._move_to_next_instruction()
 
     def _instruction_4(self, arg):
         '''Instruction 4xkk [SNE Vx, byte].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
         if self.reg_v[arg_x] != arg_kk:
-            self.move_to_next_instruction()
+            self._move_to_next_instruction()
 
     def _instruction_5(self, arg):
         '''Instruction 5xy0 [SE Vx, Vy].'''
-        (arg_x, arg_y, _) = nnn_format_to_xyn(arg)  # Last nibble is not checked to be zero from now, will change if needed
+        # Last nibble is not checked to be zero from now, will change if needed
+        (arg_x, arg_y, _) = nnn_format_to_xyn(arg)
         if self.reg_v[arg_x] == self.reg_v[arg_y]:
-            self.move_to_next_instruction()
+            self._move_to_next_instruction()
 
     def _instruction_6(self, arg):
         '''Instruction 6xkk [LD Vx, byte].'''
@@ -155,15 +158,15 @@ class Chip8:
     def _instruction_8(self, arg):
         '''Redirects to 8xy[0-7] and 8xyE.'''
         functions = {
-                0x0: self._instruction_8xy0,
-                0x1: self._instruction_8xy1,
-                0x2: self._instruction_8xy2,
-                0x3: self._instruction_8xy3,
-                0x4: self._instruction_8xy4,
-                0x5: self._instruction_8xy5,
-                0x6: self._instruction_8xy6,
-                0x7: self._instruction_8xy7,
-                0xE: self._instruction_8xyE
+            0x0: self._instruction_8xy0,
+            0x1: self._instruction_8xy1,
+            0x2: self._instruction_8xy2,
+            0x3: self._instruction_8xy3,
+            0x4: self._instruction_8xy4,
+            0x5: self._instruction_8xy5,
+            0x6: self._instruction_8xy6,
+            0x7: self._instruction_8xy7,
+            0xE: self._instruction_8xyE
         }
 
         (arg_x, arg_y, arg_n) = nnn_format_to_xyn(arg)
@@ -240,7 +243,7 @@ class Chip8:
         (arg_x, arg_y, _) = nnn_format_to_xyn(arg)
 
         if arg_x != arg_y:
-            self.move_to_next_instruction()
+            self._move_to_next_instruction()
 
     def _instruction_A(self, arg):
         '''Instruction Annn [LD I, addr].'''
@@ -257,32 +260,32 @@ class Chip8:
 
     def _instruction_D(self, arg):
         '''Instruction Dxyn [DRW Vx, Vy, nibble].'''
-        (arg_x, arg_y, arg_n) = nnn_format_to_xyn(arg)
+        (arg_x, arg_y, bytes_to_read) = nnn_format_to_xyn(arg)
 
-        #sprite = self.memory.read_data_from_addr(self.reg_i, bytes_to_read)
-        #self.reg_v[0xF] = self.scr.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
-        #self.scr.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
+        sprite = self.memory.read_data_from_addr(self.reg_i, 5 * bytes_to_read)
+        self.reg_v[0xF] = self.io_manager.video.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
+        self.io_manager.video.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
 
     def _instruction_E(self, arg):
         '''Redirects to either [SKP Vx] or [SKNP Vx].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
 
-        if last_byte == 0x9E:
-            self._instruction_Ex9E(self, arg_x)
-        elif last_byte == 0xA1:
-            self._instruction_ExA1(self, arg_x)
+        if arg_kk == 0x9E:
+            self._instruction_Ex9E(arg_x)
+        elif arg_kk == 0xA1:
+            self._instruction_ExA1(arg_x)
         else:
             raise Exception('ExXX instruction not recognised.')
 
     def _instruction_Ex9E(self, arg_x):
         '''Instruction Ex9E [SKP Vx].'''
-        if self.scr.key_pressed(self.reg_v[arg_x]):
-            self.move_to_next_instruction()
+        if self.io_manager.video.key_pressed(self.reg_v[arg_x]):
+            self._move_to_next_instruction()
 
     def _instruction_ExA1(self, arg_x):
         '''Instruction ExA1 [SKNP Vx].'''
-        if not self.scr.key_pressed(self.reg_v[arg_x]):
-            self.move_to_next_instruction()
+        if not self.io_manager.video.key_pressed(self.reg_v[arg_x]):
+            self._move_to_next_instruction()
 
     def _instruction_F(self, arg):
         '''Redirects to all instructions starting with the F nibble.'''
@@ -306,7 +309,7 @@ class Chip8:
         '''Instruction Fx07 [LD Vx, DT].'''
         self.reg_v[arg_x] = self.reg_dt.value
 
-    def _instruction_Fx0A(self, xarg_):
+    def _instruction_Fx0A(self, arg_x):
         '''Instruction Fx0A [LD Vx, K].'''
         self.reg_v[arg_x] = self.io_manager.input.wait_for_input()
 
