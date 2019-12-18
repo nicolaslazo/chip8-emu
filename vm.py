@@ -78,6 +78,7 @@ class Chip8:
             to_execute = self.memory.read_word_from_addr(self.reg_pc)
             self._execute_instruction(to_execute)
 
+            self.io_manager.video.print_debug_info(self.reg_v, self.reg_pc, to_execute)
             self.io_manager.video.refresh_display()
 
             self._move_to_next_instruction()
@@ -260,11 +261,15 @@ class Chip8:
 
     def _instruction_D(self, arg):
         '''Instruction Dxyn [DRW Vx, Vy, nibble].'''
-        (arg_x, arg_y, bytes_to_read) = nnn_format_to_xyn(arg)
+        (arg_x, arg_y, arg_n) = nnn_format_to_xyn(arg)
 
-        sprite = self.memory.read_data_from_addr(self.reg_i, 5 * bytes_to_read)
-        self.reg_v[0xF] = self.io_manager.video.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
-        self.io_manager.video.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y], sprite)
+        self.reg_v[0xF] = 0  # Reset the flag register to its default value
+
+        for row_number in range(arg_n):
+            sprite = self.memory.read_data_from_addr(self.reg_i + 5 * row_number, arg_n)
+            if self.io_manager.video.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite):
+                self.reg_v[0xF] = 1
+            self.io_manager.video.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y + row_number], sprite)
 
     def _instruction_E(self, arg):
         '''Redirects to either [SKP Vx] or [SKNP Vx].'''
