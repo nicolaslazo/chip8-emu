@@ -20,7 +20,6 @@ if __name__ == "__main__":
     GAME_ROM = load_rom(argv[1])
 
     io_manager = IOManager()
-    io_manager.init()
 
     chip8 = Chip8(GAME_ROM, io_manager)
     chip8.run()

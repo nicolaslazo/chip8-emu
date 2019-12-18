@@ -16,12 +16,12 @@ class Timer:
     def _count_down(self):
         '''Reduces the timer\'s value by 1 60 times per second (every  0.017 seconds).'''
         # function taken from https://stackoverflow.com/questions/8600161/executing-periodic-actions-in-python
-        with _value_lock:
+        with self._value_lock:
             if self.value > 0:
                 self.value -= 1
         self._next_countdown_call += 0.017
 
-        threading.Timer(_next_countdown_call - time.time(), self._count_down).start()
+        threading.Timer(self._next_countdown_call - time.time(), self._count_down).start()
 
     def set_value(self, new_value):
         '''Sets the value of the timer to new_value.'''

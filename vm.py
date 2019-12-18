@@ -50,7 +50,8 @@ class Chip8:
         self.stack = [0] * 16
 
         # Audio, video, input manager
-        self.io_manager = io_manager.init()
+        self.io_manager = io_manager
+        self.io_manager.start()
 
         # Opcode categories
         self._instruction_lookup = [
@@ -78,8 +79,8 @@ class Chip8:
             to_execute = self.memory.read_word_from_addr(self.reg_pc)
             self._execute_instruction(to_execute)
 
-            self.io_manager.video.print_debug_info(self.reg_v, self.reg_pc, to_execute)
-            self.io_manager.video.refresh_display()
+            self.io_manager.print_debug_info(self.reg_v, self.reg_pc, to_execute)
+            self.io_manager.refresh_display()
 
             self._move_to_next_instruction()
 
@@ -106,7 +107,7 @@ class Chip8:
 
     def _instruction_00E0(self):
         '''Instruction 00E0 [CLS].'''
-        self.io_manager.video.clear_screen()
+        self.io_manager.clear_screen()
 
     def _instruction_00EE(self):
         '''Instruction 00EE [RET].'''
@@ -267,9 +268,9 @@ class Chip8:
 
         for row_number in range(arg_n):
             sprite = self.memory.read_data_from_addr(self.reg_i + 5 * row_number, arg_n)
-            if self.io_manager.video.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite):
+            if self.io_manager.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite):
                 self.reg_v[0xF] = 1
-            self.io_manager.video.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y + row_number], sprite)
+            self.io_manager.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y + row_number], sprite)
 
     def _instruction_E(self, arg):
         '''Redirects to either [SKP Vx] or [SKNP Vx].'''
@@ -284,12 +285,12 @@ class Chip8:
 
     def _instruction_Ex9E(self, arg_x):
         '''Instruction Ex9E [SKP Vx].'''
-        if self.io_manager.video.key_pressed(self.reg_v[arg_x]):
+        if self.io_manager.key_pressed(self.reg_v[arg_x]):
             self._move_to_next_instruction()
 
     def _instruction_ExA1(self, arg_x):
         '''Instruction ExA1 [SKNP Vx].'''
-        if not self.io_manager.video.key_pressed(self.reg_v[arg_x]):
+        if not self.io_manager.key_pressed(self.reg_v[arg_x]):
             self._move_to_next_instruction()
 
     def _instruction_F(self, arg):
@@ -316,7 +317,7 @@ class Chip8:
 
     def _instruction_Fx0A(self, arg_x):
         '''Instruction Fx0A [LD Vx, K].'''
-        self.reg_v[arg_x] = self.io_manager.input.wait_for_input()
+        self.reg_v[arg_x] = self.io_manager.wait_for_input()
 
     def _instruction_Fx15(self, arg_x):
         '''Instruction Fx15 [LD DT, Vx].'''
@@ -325,7 +326,7 @@ class Chip8:
     def _instruction_Fx18(self, arg_x):
         '''Instruction Fx18 [LD ST, Vx].'''
         self.reg_st.set_value(self.reg_v[arg_x])
-        self.io_manager.audio.play_tone(self.reg_v[arg_x])
+        self.io_manager.play_tone(self.reg_v[arg_x])
 
     def _instruction_Fx1E(self, arg_x):
         '''Instruction Fx1E [ADD I, Vx].'''

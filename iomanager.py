@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 '''This module contains the classes that manage the input/output operations of a Chip-8 virtual machine.'''
 
 import json
@@ -11,20 +11,14 @@ def hex_to_binary(hex_value):
     return (bin(int(h, 16))[2:]).zfill(binary_length)
 
 
-class IOManager:
+class IOManager(threading.Thread):
     def __init__(self):
-        self.video = VideoManager()
-        self.input = InputManager(self.video.screen)
-        self.audio = AudioManager(self.video.screen)
-
-
-class VideoManager(threading.Thread):
-    def __init__(self):
+        super(IOManager, self).__init__()
         self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
-        self._display_lock = threading.Lock()
-
 
     def run(self):
+        self._load_key_bindings_config()
+        self._display_lock = threading.Lock()
         self.screen = Screen.wrapper(self.main_loop)
         self.screen.clear()
 
@@ -72,12 +66,6 @@ class VideoManager(threading.Thread):
                 else:
                     screen.print_at(' ', coord_x, coord_y)
 
-
-class InputManager:
-    def __init__(self, screen):
-        self.screen = screen
-        self._load_key_bindings_config()
-
     def get_input(self):
         key_event = self.screen.get_event()
         key_pressed = chr(key_event.key_code)
@@ -94,7 +82,6 @@ class InputManager:
         with open('key_bindings.json') as CONFIG_FILE:
             self.key_binding = json.load(CONFIG_FILE)
 
-
-class AudioManager:
     def play_tone(self, time):
-        pass  # Empty until I figure out how to play a single tone with Python 3.8.0 on a Windows WSL
+        pass  
+        # Empty until I figure out how to play a single tone with Python 3.8.0 on a Windows WSL
