@@ -30,7 +30,7 @@ class Chip8:
     io_manager: Audio and video manager class
 
     '''
-    def __init__(self, program, io_manager):
+    def __init__(self, program):
         # Memory buffer
         self.memory = MemoryBuffer(program)
 
@@ -48,10 +48,6 @@ class Chip8:
 
         # Stack
         self.stack = [0] * 16
-
-        # Audio, video, input manager
-        self.io_manager = io_manager
-        self.io_manager.start()
 
         # Opcode categories
         self._instruction_lookup = [
@@ -73,16 +69,12 @@ class Chip8:
             self._instruction_F
         ]
 
-    def run(self):
+    def step(self):
         '''Emulates the execution of a Chip-8 program.'''
-        while True:  # TODO: find an execution endpoint
-            to_execute = self.memory.read_word_from_addr(self.reg_pc)
-            self._execute_instruction(to_execute)
+        to_execute = self.memory.read_word_from_addr(self.reg_pc)
+        self._execute_instruction(to_execute)
 
-            self.io_manager.print_debug_info(self.reg_v, self.reg_pc, to_execute)
-            self.io_manager.refresh_display()
-
-            self._move_to_next_instruction()
+        self._move_to_next_instruction()
 
     # Opcode implementations
     def _execute_instruction(self, instruction):

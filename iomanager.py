@@ -11,20 +11,28 @@ def hex_to_binary(hex_value):
     return (bin(int(h, 16))[2:]).zfill(binary_length)
 
 
-class IOManager(threading.Thread):
-    def __init__(self):
+class IOManager():
+    def __init__(self, chip8):
         super(IOManager, self).__init__()
-        self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
 
-    def run(self):
+        # Virtual machine
+        self.chip8 = chip8
+
+        # Input setup
         self._load_key_bindings_config()
+
+        # Video setup
+        self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
         self._display_lock = threading.Lock()
         self.screen = Screen.wrapper(self.main_loop)
         self.screen.clear()
 
     def main_loop(self, screen):
         while True:
+            self.chip8.step()
+
             with self._display_lock:
+                self.print_debug_info()
                 self._draw_screen(self.display_buffer)
 
     def draw_sprite(self, sprite, pos_x, pos_y):
@@ -48,12 +56,12 @@ class IOManager(threading.Thread):
 
         return int(sprite, 16) & int(sprite_displayed, 16)
 
-    def print_debug_info(self, v_registers, pc_register, running_instruction):
+    def print_debug_info(self):
         with self._display_lock:
             screen.print_at(' ' * 64, 0, 34)
             screen.print_at(' ' * 64, 0, 35)
-            screen.print_at(f"REGISTERS: { ' '.join(v_registers) }", 0, 34)
-            screen.print_at(f'PC: { pc_register }   CURRENT INSTRUCTION: { running_instruction }', 0, 35)
+            screen.print_at(f"REGISTERS: { ' '.join(self.chip8.reg_v) }", 0, 34)
+            screen.print_at(f'PC: { self.chip8.pc_register }   CURRENT INSTRUCTION: { self.chip8.running_instruction }', 0, 35)
 
     def _get_displayed_sprite_at(self, pos_x, pos_y):
         return ''.join([self.screen.get_from(pos_x + index, pos_y) for index in range(5)])

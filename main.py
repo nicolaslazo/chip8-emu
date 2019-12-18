@@ -19,7 +19,5 @@ def load_rom(input_file):
 if __name__ == "__main__":
     GAME_ROM = load_rom(argv[1])
 
-    io_manager = IOManager()
-
-    chip8 = Chip8(GAME_ROM, io_manager)
-    chip8.run()
+    chip8 = Chip8(GAME_ROM)
+    io_manager = IOManager(chip8)
