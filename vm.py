@@ -8,15 +8,15 @@ from timer import Timer
 
 def nnn_format_to_xkk(arg):
     '''Separates a 12-bit fuction argument into 4-bit and 8-bit arguments.'''
-    arg_x = arg & 0xF00 >> 8
+    arg_x = (arg & 0xF00) >> 8
     arg_kk = arg & 0x0FF
 
     return (arg_x, arg_kk)
 
 def nnn_format_to_xyn(arg):
     '''Separates a 12-bit function argument into three 4-bit arguments.'''
-    arg_x = arg & 0xF00 >> 8
-    arg_y = arg & 0x0F0 >> 4
+    arg_x = (arg & 0xF00) >> 8
+    arg_y = (arg & 0x0F0) >> 4
     arg_n = arg & 0x00F
 
     return (arg_x, arg_y, arg_n)
@@ -69,6 +69,9 @@ class Chip8:
             self._instruction_F
         ]
 
+    def set_io_manager(self, io_manager):
+        self.io_manager = io_manager
+
     def step(self):
         '''Emulates the execution of a Chip-8 program.'''
         to_execute = self.memory.read_word_from_addr(self.reg_pc)
@@ -83,7 +86,7 @@ class Chip8:
         Serves as a way to call a search tree.
         '''
         instruction_int = int(instruction, 16)
-        instruction_category = instruction_int & 0xF000 >> 12
+        instruction_category = (instruction_int & 0xF000) >> 12
         instruction_argument = instruction_int & 0x0FFF
 
         self._instruction_lookup[instruction_category](instruction_argument)
