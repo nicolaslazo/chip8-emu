@@ -11,6 +11,9 @@ def hex_to_binary(hex_value):
     binary_length = len(hex_value) * 4
     return (bin(int(hex_value, 16))[2:]).zfill(binary_length)
 
+def fix_overflowing_coordinates(coord_x, coord_y):
+    return (coord_x % 32, coord_y + coord_x // 32)
+
 
 class IOManager():
     def __init__(self, chip8):
@@ -43,16 +46,13 @@ class IOManager():
         binary_sprite = hex_to_binary(sprite)
 
         with self._display_lock:
-            xor_sprite = []
             for (index, sprite_bit) in enumerate(binary_sprite):
+                xored_bit = 0
+                (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x + index, pos_y)
                 screen_char = chr(self.screen.get_from(pos_x + index, pos_y)[0])
                 if (sprite_bit == '0' and screen_char == 'X') or (sprite_bit == '1' and screen_char == ' '):
-                    xor_sprite.append(1)
-                elif sprite_bit == '1' and screen_char == 'X':
-                    xor_sprite.append(0)
-                else:
-                    xor_sprite.append(0)
-            self.display_buffer[pos_y][pos_x:pos_x + len(xor_sprite)] = xor_sprite
+                    xored_bit = 1
+                self.display_buffer[corrected_y][corrected_x] = xored_bit
 
     def check_collission(self, pos_x, pos_y, sprite):
         with self._display_lock:
@@ -66,13 +66,13 @@ class IOManager():
         self.screen.print_at(' ' * 64, 0, 36)
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
-        self.screen.print_at(f'PC: { self.chip8.reg_pc }', 0, 36)
+        self.screen.print_at(f'PC: { self.chip8.reg_pc }    I: { self.chip8.reg_i }', 0, 36)
 
     def _get_displayed_sprite_at(self, pos_x, pos_y):
         retval = '0b'
 
         for index in range(5):
-            if self.screen.get_from(pos_x + index, pos_y) == 'X':  # TODO: Fix as you already did in draw_sprite
+            if chr(self.screen.get_from(pos_x + index, pos_y)[0]) == 'X': 
                 retval += '1'
             else:
                 retval += '0'
