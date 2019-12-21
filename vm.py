@@ -262,10 +262,10 @@ class Chip8:
         self.reg_v[0xF] = 0  # Reset the flag register to its default value
 
         for row_number in range(arg_n):
-            sprite = self.memory.read_data_from_addr(self.reg_i + 5 * row_number, arg_n)
+            sprite = self.memory.read_byte_from_addr(self.reg_i + row_number)
             if self.io_manager.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite):
                 self.reg_v[0xF] = 1
-            self.io_manager.draw_sprite(self.reg_v[arg_x], self.reg_v[arg_y + row_number], sprite)
+            self.io_manager.draw_sprite(sprite, self.reg_v[arg_x], self.reg_v[arg_y + row_number])
 
     def _instruction_E(self, arg):
         '''Redirects to either [SKP Vx] or [SKNP Vx].'''

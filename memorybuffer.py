@@ -23,15 +23,15 @@ F080F08080'
 class MemoryBuffer:
     '''Emulated Chip-8 memory.'''
     def __init__(self, program):
-        self.memory = ['0'] * 4096
-        program_size_in_bytes = int(len(program) / 2)
+        self.memory = ['00'] * 4096
+        program_size_in_bytes = len(program) // 2
 
         self[0:80] = fontset
         self[512:512+program_size_in_bytes] = program
 
     def __setitem__(self, subscript, data):
         if isinstance(subscript, slice):
-            self.memory = self.memory[:subscript.start] + [data[i:i+2] for i in range(0, len(data) // 2, 2)]+ self.memory[subscript.stop:]
+            self.memory = self.memory[:subscript.start] + [data[i:i+2] for i in range(0, len(data), 2)]+ self.memory[subscript.stop:]
         else:
             self.memory = self.memory[:subscript] + data + self.memory[subscript+1:]
 
@@ -62,8 +62,6 @@ class MemoryBuffer:
 
     def read_data_from_addr(self, addr, bytes_to_read):
         '''Reads n bytes from the specified memory address.'''
-        if isinstance(addr, str):
-            addr = int(addr, 16)
         return ''.join(self.memory[addr:addr+bytes_to_read])
 
     def write_word_to_addr(self, data, addr):
@@ -76,6 +74,4 @@ class MemoryBuffer:
 
     def _write_data_to_addr(self, data, addr, bits):
         '''Writes n bits to the specified memory address.'''
-        if isinstance(addr, str):
-            addr = int(addr, 16)
         self.memory[addr:addr+bits] = [data[i:i+2] for i in range(0, len(data, 2))]  # Separates the data into byte-sized chunks
