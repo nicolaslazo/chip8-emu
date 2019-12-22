@@ -73,6 +73,7 @@ class Chip8:
         self.io_manager = io_manager
 
     def step(self):
+        breakpoint()
         '''Emulates the execution of a Chip-8 program.'''
         to_execute = self.memory.read_word_from_addr(self.reg_pc)
         self._execute_instruction(to_execute)
@@ -150,7 +151,7 @@ class Chip8:
     def _instruction_7(self, arg):
         '''Instruction 7xkk [ADD Vx, byte].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
-        self.reg_v[arg_x] += arg_kk
+        self.reg_v[arg_x] = (self.reg_v[arg_x] + arg_kk) % 256
 
     def _instruction_8(self, arg):
         '''Redirects to 8xy[0-7] and 8xyE.'''
@@ -280,12 +281,12 @@ class Chip8:
 
     def _instruction_Ex9E(self, arg_x):
         '''Instruction Ex9E [SKP Vx].'''
-        if self.io_manager.key_pressed(self.reg_v[arg_x]):
+        if self.io_manager.is_key_pressed(self.reg_v[arg_x]):
             self._move_to_next_instruction()
 
     def _instruction_ExA1(self, arg_x):
         '''Instruction ExA1 [SKNP Vx].'''
-        if not self.io_manager.key_pressed(self.reg_v[arg_x]):
+        if not self.io_manager.is_key_pressed(self.reg_v[arg_x]):
             self._move_to_next_instruction()
 
     def _instruction_F(self, arg):

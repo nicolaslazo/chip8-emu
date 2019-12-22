@@ -5,6 +5,7 @@ import json
 import threading
 import time
 from asciimatics.screen import Screen
+from asciimatics.event import KeyboardEvent
 
 
 def hex_to_binary(hex_value):
@@ -12,7 +13,7 @@ def hex_to_binary(hex_value):
     return (bin(int(hex_value, 16))[2:]).zfill(binary_length)
 
 def fix_overflowing_coordinates(coord_x, coord_y):
-    return (coord_x % 32, coord_y + coord_x // 32)
+    return (coord_x % 64, coord_y + coord_x // 64)
 
 
 class IOManager():
@@ -25,7 +26,7 @@ class IOManager():
         self._load_key_bindings_config()
 
         # Video setup
-        self.display_buffer = [[0] * 64] * 32  # 64x32 resolution
+        self.display_buffer = [[0] * 64 for _ in range(32)]  # 64x32 resolution
         self._display_lock = threading.Lock()
         Screen.wrapper(self.main_loop)
 
@@ -53,8 +54,9 @@ class IOManager():
                 self.display_buffer[corrected_y][corrected_x] = xored_bit
 
     def check_collission(self, sprite, pos_x, pos_y):
+        (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x, pos_y)
         with self._display_lock:
-            sprite_displayed = self._get_displayed_sprite_at(pos_x, pos_y)
+            sprite_displayed = self._get_displayed_sprite_at(corrected_x, corrected_y)
 
         return int(sprite, 16) & sprite_displayed
 
@@ -69,8 +71,9 @@ class IOManager():
     def _get_displayed_sprite_at(self, pos_x, pos_y):
         retval = '0b'
 
-        for index in range(5):
-            if chr(self.screen.get_from(pos_x + index, pos_y)[0]) == 'X': 
+        for index in range(8):
+            (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x + index, pos_y)
+            if chr(self.screen.get_from(corrected_x, corrected_y)[0]) == 'X': 
                 retval += '1'
             else:
                 retval += '0'
@@ -85,11 +88,12 @@ class IOManager():
                 else:
                     self.screen.print_at(' ', coord_x, coord_y)
 
-    def get_input(self):
+    def is_key_pressed(self, value):
         key_event = self.screen.get_event()
-        key_pressed = chr(key_event.key_code)
+        if isinstance(key_event, KeyboardEvent):
+            key_pressed = chr(key_event.key_code)
 
-        return self.key_binding[key_pressed]
+        return self.key_binding[key_pressed] == value
 
     def wait_for_input(self):
         '''Stops execution until a key is pressed.'''
