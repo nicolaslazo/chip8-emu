@@ -342,12 +342,12 @@ class Chip8:
 
     def _instruction_Fx55(self, arg_x):
         '''Instruction Fx55 [LD [I], Vx].'''
-        for register_number in range(arg_x):
+        for register_number in range(arg_x + 1):
             self.memory.write_byte_to_addr(self.reg_v[register_number], self.reg_i + register_number)
 
     def _instruction_Fx65(self, arg_x):
         '''Instruction Fx65 [LD Vx, [I]].'''
-        for register_number in range(arg_x):
+        for register_number in range(arg_x + 1):
             self.reg_v[register_number] = int(self.memory.read_byte_from_addr(self.reg_i + register_number), 16)
 
     def _move_to_next_instruction(self):

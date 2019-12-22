@@ -1,3 +1,5 @@
 *.ch8
 *.swp
 __pycache__
+decompiled.*
+roms/
