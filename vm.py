@@ -263,9 +263,9 @@ class Chip8:
 
         for row_number in range(arg_n):
             sprite = self.memory.read_byte_from_addr(self.reg_i + row_number)
-            if self.io_manager.check_collission(self.reg_v[arg_x], self.reg_v[arg_y], sprite):
+            if self.io_manager.check_collission(sprite, self.reg_v[arg_x], self.reg_v[arg_y]):
                 self.reg_v[0xF] = 1
-            self.io_manager.draw_sprite(sprite, self.reg_v[arg_x], self.reg_v[arg_y + row_number])
+            self.io_manager.draw_sprite(sprite, self.reg_v[arg_x], self.reg_v[arg_y] + row_number)
 
     def _instruction_E(self, arg):
         '''Redirects to either [SKP Vx] or [SKNP Vx].'''
@@ -347,7 +347,7 @@ class Chip8:
     def _instruction_Fx65(self, arg_x):
         '''Instruction Fx65 [LD Vx, [I]].'''
         for register_number in range(arg_x):
-            self.reg_v[register_number] = self.memory.read_byte_from_addr(self.reg_i + register_number)
+            self.reg_v[register_number] = int(self.memory.read_byte_from_addr(self.reg_i + register_number), 16)
 
     def _move_to_next_instruction(self):
         '''Increases the PC register to point to the next instruction.'''
@@ -358,8 +358,8 @@ class Chip8:
         if self.reg_sp == 0xF:
             raise Exception('Full stack.')
 
-        self.reg_sp += 1
         self.stack[self.reg_sp] = value
+        self.reg_sp += 1
 
     def pop_from_stack(self):
         '''Pops a value from the stack.'''

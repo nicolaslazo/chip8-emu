@@ -40,8 +40,6 @@ class IOManager():
                 self._draw_screen()
                 screen.refresh()
 
-            time.sleep(.5)
-
     def draw_sprite(self, sprite, pos_x, pos_y):
         binary_sprite = hex_to_binary(sprite)
 
@@ -49,12 +47,12 @@ class IOManager():
             for (index, sprite_bit) in enumerate(binary_sprite):
                 xored_bit = 0
                 (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x + index, pos_y)
-                screen_char = chr(self.screen.get_from(pos_x + index, pos_y)[0])
+                screen_char = chr(self.screen.get_from(corrected_x, corrected_y)[0])
                 if (sprite_bit == '0' and screen_char == 'X') or (sprite_bit == '1' and screen_char == ' '):
                     xored_bit = 1
                 self.display_buffer[corrected_y][corrected_x] = xored_bit
 
-    def check_collission(self, pos_x, pos_y, sprite):
+    def check_collission(self, sprite, pos_x, pos_y):
         with self._display_lock:
             sprite_displayed = self._get_displayed_sprite_at(pos_x, pos_y)
 
@@ -66,7 +64,7 @@ class IOManager():
         self.screen.print_at(' ' * 64, 0, 36)
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
-        self.screen.print_at(f'PC: { self.chip8.reg_pc }    I: { self.chip8.reg_i }', 0, 36)
+        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc - 2)[2:].upper() }    I: { self.chip8.reg_i }', 0, 36)
 
     def _get_displayed_sprite_at(self, pos_x, pos_y):
         retval = '0b'
@@ -82,7 +80,7 @@ class IOManager():
     def _draw_screen(self):
         for coord_y in range(32):
             for coord_x in range(64):
-                if self.display_buffer[coord_y][coord_x] == '1':
+                if self.display_buffer[coord_y][coord_x] == 1:
                     self.screen.print_at('X', coord_x, coord_y)
                 else:
                     self.screen.print_at(' ', coord_x, coord_y)

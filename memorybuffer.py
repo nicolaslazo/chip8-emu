@@ -44,13 +44,9 @@ class MemoryBuffer:
     def __str__(self):
         print(self.memory)
 
-    def find_sprite_address(self, hex_digit):
+    def find_sprite_address(self, sprite):
         '''Returns the memory address in which the sprite data is located.'''
-        return self.sprite_memory_space().index(hex_digit)
-
-    def sprite_memory_space(self):
-        '''Returns the section of the memory space dedicated to sprite storage.'''
-        return self.memory[:512]
+        return self.memory.index(hex(sprite)[2:], 512)
 
     def read_word_from_addr(self, addr):
         '''Reads 2 bytes from the specified memory address.'''
@@ -72,6 +68,7 @@ class MemoryBuffer:
         '''Writes 1 byte to the specified memory address.'''
         self._write_data_to_addr(data, addr, 1)
 
-    def _write_data_to_addr(self, data, addr, bits):
-        '''Writes n bits to the specified memory address.'''
-        self.memory[addr:addr+bits] = [data[i:i+2] for i in range(0, len(data, 2))]  # Separates the data into byte-sized chunks
+    def _write_data_to_addr(self, data, addr, n_bytes):
+        '''Writes n bytes to the specified memory address.'''
+        data = hex(data)[2:].zfill(n_bytes * 2)
+        self.memory[addr:addr+n_bytes] = [data[i:i+2] for i in range(0, len(data), 2)]  # Separates the data into byte-sized chunks
