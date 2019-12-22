@@ -21,6 +21,12 @@ def nnn_format_to_xyn(arg):
 
     return (arg_x, arg_y, arg_n)
 
+def nnn_to_bcd(arg):
+    hundreds_digit = arg // 100
+    tens_digit = (arg % 100) // 10
+    ones_digit = (arg % 10)
+
+    return (hundreds_digit, tens_digit, ones_digit)
 
 class Chip8:
     '''Emulated Chip-8 machine.
@@ -73,7 +79,6 @@ class Chip8:
         self.io_manager = io_manager
 
     def step(self):
-        breakpoint()
         '''Emulates the execution of a Chip-8 program.'''
         to_execute = self.memory.read_word_from_addr(self.reg_pc)
         self._execute_instruction(to_execute)
@@ -107,8 +112,7 @@ class Chip8:
 
     def _instruction_00EE(self):
         '''Instruction 00EE [RET].'''
-        return_address = self.pop_from_stack()
-        self.reg_pc = return_address
+        self.reg_pc = self.pop_from_stack()
 
     def _instruction_0nnn(self, addr):
         '''Instruction 0nnn [SYS addr].'''
@@ -138,7 +142,7 @@ class Chip8:
 
     def _instruction_5(self, arg):
         '''Instruction 5xy0 [SE Vx, Vy].'''
-        # Last nibble is not checked to be zero from now, will change if needed
+        # Last nibble is not checked to be zero for now, will change if needed
         (arg_x, arg_y, _) = nnn_format_to_xyn(arg)
         if self.reg_v[arg_x] == self.reg_v[arg_y]:
             self._move_to_next_instruction()
@@ -151,7 +155,13 @@ class Chip8:
     def _instruction_7(self, arg):
         '''Instruction 7xkk [ADD Vx, byte].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
-        self.reg_v[arg_x] = (self.reg_v[arg_x] + arg_kk) % 256
+        self.reg_v[arg_x] += arg_kk
+
+        if self.reg_v[arg_x] >= 256:
+            self.reg_v[arg_x] %= 256
+            self.reg_v[0xF] = 1
+        else:
+            self.reg_v[0xF] = 0
 
     def _instruction_8(self, arg):
         '''Redirects to 8xy[0-7] and 8xyE.'''
@@ -176,22 +186,22 @@ class Chip8:
 
     def _instruction_8xy1(self, arg_x, arg_y):
         '''Instruction 8xy1 [OR Vx, Vy].'''
-        self.reg_v[arg_x] = self.reg_v[arg_x] | self.reg_v[arg_y]
+        self.reg_v[arg_x] |= self.reg_v[arg_y]
 
     def _instruction_8xy2(self, arg_x, arg_y):
         '''Instruction 8xy2 [AND Vx, Vy].'''
-        self.reg_v[arg_x] = self.reg_v[arg_x] & self.reg_v[arg_y]
+        self.reg_v[arg_x] &= self.reg_v[arg_y]
 
     def _instruction_8xy3(self, arg_x, arg_y):
         '''Instruction 8xy3 [XOR Vx, Vy].'''
-        self.reg_v[arg_x] = self.reg_v[arg_x] ^ self.reg_v[arg_y]
+        self.reg_v[arg_x] ^= self.reg_v[arg_y]
 
     def _instruction_8xy4(self, arg_x, arg_y):
         '''Instruction 8xy4 [ADD Vx, Vy].'''
         self.reg_v[arg_x] += self.reg_v[arg_y]
 
-        if self.reg_v[arg_x] > 255:
-            self.reg_v[arg_x] %= 255
+        if self.reg_v[arg_x] >= 256:
+            self.reg_v[arg_x] %= 256
             self.reg_v[0xF] = 1
         else:
             self.reg_v[0xF] = 0
@@ -335,10 +345,12 @@ class Chip8:
     def _instruction_Fx33(self, arg_x):
         '''Instruction Fx33 [LD B, Vx].'''
         i_addr = self.reg_i
+        value_to_convert = self.reg_v[arg_x]
+        (hundreds_digit, tens_digit, ones_digit) = nnn_to_bcd(value_to_convert)
 
-        self.memory.write_word_to_addr((arg_x // 100) % 10, i_addr)
-        self.memory.write_word_to_addr((arg_x // 10) % 10, i_addr + 2)
-        self.memory.write_word_to_addr(arg_x % 10, i_addr + 4)
+        self.memory.write_byte_to_addr(hundreds_digit, i_addr)
+        self.memory.write_byte_to_addr(tens_digit, i_addr + 1)
+        self.memory.write_byte_to_addr(ones_digit, i_addr + 2)
 
     def _instruction_Fx55(self, arg_x):
         '''Instruction Fx55 [LD [I], Vx].'''

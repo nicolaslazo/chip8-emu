@@ -66,7 +66,7 @@ class IOManager():
         self.screen.print_at(' ' * 64, 0, 36)
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
-        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc - 2)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }', 0, 36)
+        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }', 0, 36)
 
     def clear_screen(self):
         self.display_buffer = [[0] * 64 for _ in range(32)]
