@@ -4,6 +4,7 @@
 import json
 import threading
 import time
+from romdecompiler import decompile_instruction
 from asciimatics.screen import Screen
 from asciimatics.event import KeyboardEvent
 
@@ -34,6 +35,7 @@ class IOManager():
         self.screen = screen
 
         while True:
+            breakpoint()
             self.chip8.step()
 
             with self._display_lock:
@@ -67,6 +69,24 @@ class IOManager():
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
         self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }', 0, 36)
+
+        """
+        self.screen.print_at('                       ', 34, 1)
+        self.screen.print_at('                       ', 34, 2)
+        self.screen.print_at('                       ', 34, 3)
+        self.screen.print_at('                       ', 34, 4)
+        self.screen.print_at('                       ', 34, 5)
+
+        try:
+            self.screen.print_at('    ' + decompile_instruction(self.chip8.memory.read_word_from_addr(self.chip8.reg_pc - 4)) + '    ', 34, 1)
+            self.screen.print_at('    ' + decompile_instruction(self.chip8.memory.read_word_from_addr(self.chip8.reg_pc - 2)) + '    ', 34, 2)
+        except:
+            pass
+
+        self.screen.print_at('--> ' + decompile_instruction(self.chip8.memory.read_word_from_addr(self.chip8.reg_pc)) + ' <--', 34, 3)
+        self.screen.print_at('    ' + decompile_instruction(self.chip8.memory.read_word_from_addr(self.chip8.reg_pc + 2)) + '    ', 34, 4)
+        self.screen.print_at('    ' + decompile_instruction(self.chip8.memory.read_word_from_addr(self.chip8.reg_pc + 4)) + '    ', 34, 5)
+        """
 
     def clear_screen(self):
         self.display_buffer = [[0] * 64 for _ in range(32)]

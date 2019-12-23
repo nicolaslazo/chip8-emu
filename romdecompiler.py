@@ -10,9 +10,9 @@ def decompile_instruction(instruction):
 
 def _instruction_0(arg):
     '''Redirects to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
-    if arg == '0e0':
+    if arg == '0E0':
         return _instruction_00E0()
-    elif arg == '0ee':
+    elif arg == '0EE':
         return _instruction_00EE()
     else:
         return _instruction_0nnn(arg)
@@ -79,7 +79,7 @@ def _instruction_8(arg):
         '5': _instruction_8xy5,
         '6': _instruction_8xy6,
         '7': _instruction_8xy7,
-        'e': _instruction_8xyE
+        'E': _instruction_8xyE
     }
 
     (x, y, instruction_nibble) = arg
@@ -160,9 +160,9 @@ def _instruction_E(arg):
     '''Redirects to either [SKP Vx] or [SKNP Vx].'''
     last_byte = arg[1:]
 
-    if last_byte == '9e':
+    if last_byte == '9E':
         return _instruction_Ex9E(arg[0])
-    elif last_byte == 'a1':
+    elif last_byte == 'A1':
         return _instruction_ExA1(arg[0])
     else:
         raise Exception('ExXX instruction not recognised.')
@@ -182,10 +182,10 @@ def _instruction_F(arg):
     '''Redirects to all instructions starting with the F nibble.'''
     functions = {
         '07': _instruction_Fx07,
-        '0a': _instruction_Fx0A,
+        '0A': _instruction_Fx0A,
         '15': _instruction_Fx15,
         '18': _instruction_Fx18,
-        '1e': _instruction_Fx1E,
+        '1E': _instruction_Fx1E,
         '29': _instruction_Fx29,
         '33': _instruction_Fx33,
         '55': _instruction_Fx55,
@@ -253,12 +253,12 @@ _instruction_category = {
     '7': _instruction_7,
     '8': _instruction_8,
     '9': _instruction_9,
-    'a': _instruction_A,
-    'b': _instruction_B,
-    'c': _instruction_C,
-    'd': _instruction_D,
-    'e': _instruction_E,
-    'f': _instruction_F
+    'A': _instruction_A,
+    'B': _instruction_B,
+    'C': _instruction_C,
+    'D': _instruction_D,
+    'E': _instruction_E,
+    'F': _instruction_F
 }
 
 
@@ -271,11 +271,11 @@ if __name__ == '__main__':
     print('=' * 32)
 
     while True:
-        read_word = rom_file.read(2).hex()
+        read_word = rom_file.read(2).hex().upper()
 
         if not read_word:
             break
 
-        print('{0:03X}: {1:s}'.format(counter, decompile_instruction(read_word).upper()))
+        print('{0:03X}: {1:s}'.format(counter, decompile_instruction(read_word)))
 
         counter += 2
