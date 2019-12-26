@@ -14,7 +14,7 @@ def hex_to_binary(hex_value):
     return (bin(int(hex_value, 16))[2:]).zfill(binary_length)
 
 def fix_overflowing_coordinates(coord_x, coord_y):
-    return (coord_x % 64, (coord_y + coord_x // 64) % 32)
+    return (coord_x % 64, coord_y % 32)
 
 
 class IOManager():
@@ -67,7 +67,7 @@ class IOManager():
         self.screen.print_at(' ' * 64, 0, 36)
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
-        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }   DT: { self.chip8.reg_dt.value }', 0, 36)
+        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }   DT: { self.chip8.delay_timer.get_value() }', 0, 36)
 
         """
         self.screen.print_at('                       ', 34, 1)

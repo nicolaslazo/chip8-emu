@@ -49,8 +49,8 @@ class Chip8:
         self.reg_sp = 0
 
         # Timers
-        self.reg_dt = Timer()
-        self.reg_st = Timer()
+        self.delay_timer = Timer()
+        self.sound_timer = Timer()
 
         # Stack
         self.stack = [0] * 16
@@ -320,7 +320,7 @@ class Chip8:
 
     def _instruction_Fx07(self, arg_x):
         '''Instruction Fx07 [LD Vx, DT].'''
-        self.reg_v[arg_x] = self.reg_dt.get_value()
+        self.reg_v[arg_x] = self.delay_timer.get_value()
 
     def _instruction_Fx0A(self, arg_x):
         '''Instruction Fx0A [LD Vx, K].'''
@@ -328,11 +328,11 @@ class Chip8:
 
     def _instruction_Fx15(self, arg_x):
         '''Instruction Fx15 [LD DT, Vx].'''
-        self.reg_dt.set_value(self.reg_v[arg_x])
+        self.delay_timer.set_value(self.reg_v[arg_x])
 
     def _instruction_Fx18(self, arg_x):
         '''Instruction Fx18 [LD ST, Vx].'''
-        self.reg_st.set_value(self.reg_v[arg_x])
+        self.sound_timer.set_value(self.reg_v[arg_x])
         self.io_manager.play_tone(self.reg_v[arg_x])
 
     def _instruction_Fx1E(self, arg_x):
