@@ -5,22 +5,23 @@ import threading
 import time
 
 
-class Timer:
+class Timer(threading.Thread):
     def __init__(self):
+        super(Timer, self).__init__(daemon=True)
+
         self.value = 0
         self._value_lock = threading.Lock()
         self._next_countdown_call = time.time()
-        self._count_down()
 
-    def _count_down(self):
-        '''Reduce the timer\'s value by 1 60 times per second (every  0.017 seconds).'''
-        # function taken from https://stackoverflow.com/questions/8600161/executing-periodic-actions-in-python
-        with self._value_lock:
-            if self.value > 0:
-                self.value -= 1
-        self._next_countdown_call += 0.017
-
-        threading.Timer(self._next_countdown_call - time.time(), self._count_down).start()
+    def run(self):
+        '''Reduce the timer\'s value by 1 60 times per second (every  0.017 seconds).
+        Function taken from https://stackoverflow.com/questions/8600161/executing-periodic-actions-in-python'''
+        while True:
+            with self._value_lock:
+                if self.value > 0:
+                    self.value -= 1
+            self._next_countdown_call += 0.017
+            time.sleep(max(self._next_countdown_call - time.time(), 0))
 
     def set_value(self, new_value):
         '''Set the value of the timer to new_value.'''

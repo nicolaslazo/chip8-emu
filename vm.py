@@ -51,6 +51,8 @@ class Chip8:
         # Timers
         self.delay_timer = Timer()
         self.sound_timer = Timer()
+        self.delay_timer.start()
+        self.sound_timer.start()
 
         # Stack
         self.stack = [0] * 16
