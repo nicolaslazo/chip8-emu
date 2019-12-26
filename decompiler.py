@@ -9,7 +9,7 @@ def decompile_instruction(instruction):
 
 
 def _instruction_0(arg):
-    '''Redirects to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
+    '''Redirect to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
     if arg == '0E0':
         return _instruction_00E0()
     elif arg == '0EE':
@@ -69,7 +69,7 @@ def _instruction_7(arg):
 
 
 def _instruction_8(arg):
-    '''Redirects to 8xy[0-7] and 8xyE.'''
+    '''Redirect to 8xy[0-7] and 8xyE.'''
     functions = {
         '0': _instruction_8xy0,
         '1': _instruction_8xy1,
@@ -157,7 +157,7 @@ def _instruction_D(arg):
 
 
 def _instruction_E(arg):
-    '''Redirects to either [SKP Vx] or [SKNP Vx].'''
+    '''Redirect to either [SKP Vx] or [SKNP Vx].'''
     last_byte = arg[1:]
 
     if last_byte == '9E':
@@ -179,7 +179,7 @@ def _instruction_ExA1(x):
 
 
 def _instruction_F(arg):
-    '''Redirects to all instructions starting with the F nibble.'''
+    '''Redirect to all instructions starting with the F nibble.'''
     functions = {
         '07': _instruction_Fx07,
         '0A': _instruction_Fx0A,
@@ -276,6 +276,11 @@ if __name__ == '__main__':
         if not read_word:
             break
 
-        print('{0:03X}: {1:s}'.format(counter, decompile_instruction(read_word)))
+        try:
+            decompiled_instruction = decompile_instruction(read_word)
+        except:
+            decompiled_instruction = 'SPRITE???'
+
+        print('{0:03X}: {1:s}'.format(counter, decompiled_instruction))
 
         counter += 2

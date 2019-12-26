@@ -7,14 +7,14 @@ from timer import Timer
 
 
 def nnn_format_to_xkk(arg):
-    '''Separates a 12-bit fuction argument into 4-bit and 8-bit arguments.'''
+    '''Separate a 12-bit fuction argument into 4-bit and 8-bit arguments.'''
     arg_x = (arg & 0xF00) >> 8
     arg_kk = arg & 0x0FF
 
     return (arg_x, arg_kk)
 
 def nnn_format_to_xyn(arg):
-    '''Separates a 12-bit function argument into three 4-bit arguments.'''
+    '''Separate a 12-bit function argument into three 4-bit arguments.'''
     arg_x = (arg & 0xF00) >> 8
     arg_y = (arg & 0x0F0) >> 4
     arg_n = arg & 0x00F
@@ -22,6 +22,7 @@ def nnn_format_to_xyn(arg):
     return (arg_x, arg_y, arg_n)
 
 def nnn_to_bcd(arg):
+    '''Take a 12-bit argument and separate its decimal representation into its hundreds, tens and ones digits.'''
     hundreds_digit = arg // 100
     tens_digit = (arg % 100) // 10
     ones_digit = (arg % 10)
@@ -33,7 +34,6 @@ class Chip8:
 
     Parameters:
     program: Chip-8 binary in binary string format
-    io_manager: Audio and video manager class
 
     '''
     def __init__(self, program):
@@ -76,10 +76,11 @@ class Chip8:
         ]
 
     def set_io_manager(self, io_manager):
+        '''Set the given IOManager as a class attribute. Hack.'''
         self.io_manager = io_manager
 
     def step(self):
-        '''Emulates the execution of a Chip-8 program.'''
+        '''Emulate the execution of a Chip-8 program.'''
         to_execute = self.memory.read_word_from_addr(self.reg_pc)
         self._execute_instruction(to_execute)
 
@@ -88,7 +89,7 @@ class Chip8:
     # Opcode implementations
     def _execute_instruction(self, instruction):
         '''
-        Given the instruction xyzw, calls the function _instruction_x with yzw as an argument.
+        Given the instruction xyzw, call the function _instruction_x with yzw as an argument.
         Serves as a way to call a search tree.
         '''
         instruction_int = int(instruction, 16)
@@ -98,7 +99,7 @@ class Chip8:
         self._instruction_lookup[instruction_category](instruction_argument)
 
     def _instruction_0(self, arg):
-        '''Redirects to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
+        '''Redirect to 0nnn [SYS addr], 00E0 [CLS] or 00EE [RET].'''
         if arg == 0x00E0:
             self._instruction_00E0()
         elif arg == 0x00EE:
@@ -121,7 +122,7 @@ class Chip8:
 
     def _instruction_1(self, addr):
         '''Instruction 1nnn [JP addr].'''
-        self.reg_pc = addr
+        self.reg_pc = addr - 2  # Hack, so that at the end of the CPU cycle it points to the intended place
 
     def _instruction_2(self, addr):
         '''Instruction 2nnn [CALL addr].'''
@@ -164,7 +165,7 @@ class Chip8:
             self.reg_v[0xF] = 0
 
     def _instruction_8(self, arg):
-        '''Redirects to 8xy[0-7] and 8xyE.'''
+        '''Redirect to 8xy[0-7] and 8xyE.'''
         functions = {
             0x0: self._instruction_8xy0,
             0x1: self._instruction_8xy1,
@@ -279,7 +280,7 @@ class Chip8:
             self.io_manager.draw_sprite(sprite, self.reg_v[arg_x], self.reg_v[arg_y] + row_number)
 
     def _instruction_E(self, arg):
-        '''Redirects to either [SKP Vx] or [SKNP Vx].'''
+        '''Redirect to either [SKP Vx] or [SKNP Vx].'''
         (arg_x, arg_kk) = nnn_format_to_xkk(arg)
 
         if arg_kk == 0x9E:
@@ -300,7 +301,7 @@ class Chip8:
             self._move_to_next_instruction()
 
     def _instruction_F(self, arg):
-        '''Redirects to all instructions starting with the F nibble.'''
+        '''Redirect to all instructions starting with the F nibble.'''
         functions = {
             0x07: self._instruction_Fx07,
             0x0A: self._instruction_Fx0A,
@@ -319,7 +320,7 @@ class Chip8:
 
     def _instruction_Fx07(self, arg_x):
         '''Instruction Fx07 [LD Vx, DT].'''
-        self.reg_v[arg_x] = self.reg_dt.value
+        self.reg_v[arg_x] = self.reg_dt.get_value()
 
     def _instruction_Fx0A(self, arg_x):
         '''Instruction Fx0A [LD Vx, K].'''
@@ -340,7 +341,7 @@ class Chip8:
 
     def _instruction_Fx29(self, arg_x):
         '''Instruction Fx29 [LD F, Vx].'''
-        self.reg_i = self.memory.find_sprite_address(self.reg_v[arg_x])
+        self.reg_i = arg_x * 5
 
     def _instruction_Fx33(self, arg_x):
         '''Instruction Fx33 [LD B, Vx].'''
@@ -355,19 +356,21 @@ class Chip8:
     def _instruction_Fx55(self, arg_x):
         '''Instruction Fx55 [LD [I], Vx].'''
         for register_number in range(arg_x + 1):
-            self.memory.write_byte_to_addr(self.reg_v[register_number], self.reg_i + register_number)
+            write_addr = self.reg_i + register_number
+            self.memory.write_byte_to_addr(self.reg_v[register_number], write_addr)
 
     def _instruction_Fx65(self, arg_x):
         '''Instruction Fx65 [LD Vx, [I]].'''
         for register_number in range(arg_x + 1):
-            self.reg_v[register_number] = int(self.memory.read_byte_from_addr(self.reg_i + register_number), 16)
+            read_addr = self.reg_i + register_number
+            self.reg_v[register_number] = int(self.memory.read_byte_from_addr(read_addr), 16)
 
     def _move_to_next_instruction(self):
-        '''Increases the PC register to point to the next instruction.'''
+        '''Increase the PC register to point to the next instruction.'''
         self.reg_pc += 2  # Instructions are 2 bytes long
 
     def push_to_stack(self, value):
-        '''Pushes a value to the stack.'''
+        '''Push a value to the stack.'''
         if self.reg_sp == 0xF:
             raise Exception('Full stack.')
 
@@ -375,10 +378,9 @@ class Chip8:
         self.reg_sp += 1
 
     def pop_from_stack(self):
-        '''Pops a value from the stack.'''
+        '''Pop a value from the stack.'''
         if self.reg_sp == 0:
             raise Exception('Empty Stack')
 
-        return_val = self.stack[self.reg_sp]
         self.reg_sp -= 1
-        return return_val
+        return self.stack[self.reg_sp]

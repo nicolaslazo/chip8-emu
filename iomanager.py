@@ -4,7 +4,7 @@
 import json
 import threading
 import time
-from romdecompiler import decompile_instruction
+from decompiler import decompile_instruction
 from asciimatics.screen import Screen
 from asciimatics.event import KeyboardEvent
 
@@ -14,7 +14,7 @@ def hex_to_binary(hex_value):
     return (bin(int(hex_value, 16))[2:]).zfill(binary_length)
 
 def fix_overflowing_coordinates(coord_x, coord_y):
-    return (coord_x % 64, coord_y + coord_x // 64)
+    return (coord_x % 64, (coord_y + coord_x // 64) % 32)
 
 
 class IOManager():
@@ -35,7 +35,6 @@ class IOManager():
         self.screen = screen
 
         while True:
-            breakpoint()
             self.chip8.step()
 
             with self._display_lock:
@@ -63,12 +62,12 @@ class IOManager():
         return int(sprite, 16) & sprite_displayed
 
     def print_debug_info(self):
-        self.screen.print_at(' ' * 64, 0, 34)
+        self.screen.print_at(' ' * 96, 0, 34)
         self.screen.print_at(' ' * 64, 0, 35)
         self.screen.print_at(' ' * 64, 0, 36)
         self.screen.print_at(f'REGISTERS: { self.chip8.reg_v }', 0, 34)
         self.screen.print_at(f'STACK: { self.chip8.stack }', 0, 35)
-        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }', 0, 36)
+        self.screen.print_at(f'PC: { hex(self.chip8.reg_pc)[2:].upper() }    I: { hex(self.chip8.reg_i)[2:].upper() }   DT: { self.chip8.reg_dt.value }', 0, 36)
 
         """
         self.screen.print_at('                       ', 34, 1)
@@ -112,17 +111,27 @@ class IOManager():
                     self.screen.print_at(' ', coord_x, coord_y)
 
     def is_key_pressed(self, value):
+        self.screen.wait_for_input(.00000001)
         key_event = self.screen.get_event()
-        if isinstance(key_event, KeyboardEvent):
-            key_pressed = chr(key_event.key_code)
+        if key_event == None or not isinstance(key_event, KeyboardEvent):
+            return False
+        key_pressed = chr(key_event.key_code)
 
-        return self.key_binding[key_pressed] == value
+        try:
+            return self.key_binding[key_pressed] == value
+        except KeyError:
+            return self.is_key_pressed(value)
 
     def wait_for_input(self):
-        '''Stops execution until a key is pressed.'''
-        key_pressed = self.screen.wait_for_input()
+        '''Stop execution until a key is pressed.'''
+        self.screen.wait_for_input(999999)
+        key_event = self.screen.get_event()
 
-        return self.key_binding[key_pressed]
+        try:
+            key_pressed = chr(key_event.key_code)
+            return self.key_binding[key_pressed]
+        except AttributeError:
+            return self.wait_for_input()
 
     def _load_key_bindings_config(self):
         with open('key_bindings.json') as CONFIG_FILE:
@@ -130,4 +139,4 @@ class IOManager():
 
     def play_tone(self, time):
         pass  
-        # Empty until I figure out how to play a single tone with Python 3.8.0 on a Windows WSL
+        # Empty because the Windows WSL where I work doesn't support audio

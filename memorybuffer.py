@@ -2,7 +2,7 @@
 '''This module contains the MemoryBuffer class.'''
 
 
-fontset = 'F0909090F0\
+FONTSET = 'F0909090F0\
 2060202070\
 F010F080F0\
 F010F010F0\
@@ -26,12 +26,13 @@ class MemoryBuffer:
         self.memory = ['00'] * 4096
         program_size_in_bytes = len(program) // 2
 
-        self[0:80] = fontset
+        self[0:80] = FONTSET
         self[512:512+program_size_in_bytes] = program
 
     def __setitem__(self, subscript, data):
         if isinstance(subscript, slice):
-            self.memory = self.memory[:subscript.start] + [data[i:i+2] for i in range(0, len(data), 2)]+ self.memory[subscript.stop:]
+            new_slice = [data[i:i+2] for i in range(0, len(data), 2)]
+            self.memory = self.memory[:subscript.start] + new_slice + self.memory[subscript.stop:]
         else:
             self.memory = self.memory[:subscript] + data + self.memory[subscript+1:]
 
@@ -44,31 +45,27 @@ class MemoryBuffer:
     def __str__(self):
         print(self.memory)
 
-    def find_sprite_address(self, sprite):
-        '''Returns the memory address in which the sprite data is located.'''
-        return self.memory.index(hex(sprite)[2:].zfill(2), 512)
-
     def read_word_from_addr(self, addr):
-        '''Reads 2 bytes from the specified memory address.'''
+        '''Read 2 bytes from the specified memory address.'''
         return self.read_data_from_addr(addr, 2)
 
     def read_byte_from_addr(self, addr):
-        '''Reads 1 byte from the specified memory address.'''
+        '''Read 1 byte from the specified memory address.'''
         return self.read_data_from_addr(addr, 1)
 
     def read_data_from_addr(self, addr, bytes_to_read):
-        '''Reads n bytes from the specified memory address.'''
+        '''Read n bytes from the specified memory address.'''
         return ''.join(self.memory[addr:addr+bytes_to_read])
 
     def write_word_to_addr(self, data, addr):
-        '''Writes 2 bytes to the specified memory address.'''
+        '''Write 2 bytes to the specified memory address.'''
         self._write_data_to_addr(data, addr, 2)
 
     def write_byte_to_addr(self, data, addr):
-        '''Writes 1 byte to the specified memory address.'''
+        '''Write 1 byte to the specified memory address.'''
         self._write_data_to_addr(data, addr, 1)
 
     def _write_data_to_addr(self, data, addr, n_bytes):
-        '''Writes n bytes to the specified memory address.'''
+        '''Write n bytes to the specified memory address.'''
         data = hex(data)[2:].zfill(n_bytes * 2)
         self.memory[addr:addr+n_bytes] = [data[i:i+2] for i in range(0, len(data), 2)]  # Separates the data into byte-sized chunks
