@@ -10,14 +10,18 @@ from asciimatics.event import KeyboardEvent
 
 
 def hex_to_binary(hex_value):
+    '''Return the binary equivalent of a hexadecimal value.'''
     binary_length = len(hex_value) * 4
     return (bin(int(hex_value, 16))[2:]).zfill(binary_length)
 
+
 def fix_overflowing_coordinates(coord_x, coord_y):
+    '''If a sprite coordinate gets out of the display bounds, returns its fixed position.'''
     return (coord_x % 64, coord_y % 32)
 
 
 class IOManager():
+    '''Chip-8 machine input/output manager.'''
     def __init__(self, chip8):
         # Virtual machine
         self.chip8 = chip8
@@ -32,6 +36,7 @@ class IOManager():
         Screen.wrapper(self.main_loop)
 
     def main_loop(self, screen):
+        '''Emulates a Chip-8 machine cycle.'''
         self.screen = screen
 
         while True:
@@ -43,6 +48,7 @@ class IOManager():
                 screen.refresh()
 
     def draw_sprite(self, sprite, pos_x, pos_y):
+        '''Draw a sprite in the specified coordinates.'''
         binary_sprite = hex_to_binary(sprite)
 
         with self._display_lock:
@@ -55,6 +61,7 @@ class IOManager():
                 self.display_buffer[corrected_y][corrected_x] = xored_bit
 
     def check_collission(self, sprite, pos_x, pos_y):
+        '''Returns True if sprite collides with what is already drawn in the given coordinates.'''
         (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x, pos_y)
         with self._display_lock:
             sprite_displayed = self._get_displayed_sprite_at(corrected_x, corrected_y)
@@ -62,6 +69,7 @@ class IOManager():
         return int(sprite, 16) & sprite_displayed
 
     def print_debug_info(self):
+        '''Print CPU-related info to the screen for debugging purposes.'''
         self.screen.print_at(' ' * 96, 0, 34)
         self.screen.print_at(' ' * 64, 0, 35)
         self.screen.print_at(' ' * 64, 0, 36)
@@ -88,32 +96,14 @@ class IOManager():
         """
 
     def clear_screen(self):
+        '''Set all the display buffer bytes to zero.'''
         self.display_buffer = [[0] * 64 for _ in range(32)]
 
-    def _get_displayed_sprite_at(self, pos_x, pos_y):
-        retval = '0b'
-
-        for index in range(8):
-            (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x + index, pos_y)
-            if chr(self.screen.get_from(corrected_x, corrected_y)[0]) == 'X': 
-                retval += '1'
-            else:
-                retval += '0'
-
-        return int(retval, 2)
-
-    def _draw_screen(self):
-        for coord_y in range(32):
-            for coord_x in range(64):
-                if self.display_buffer[coord_y][coord_x] == 1:
-                    self.screen.print_at('X', coord_x, coord_y)
-                else:
-                    self.screen.print_at(' ', coord_x, coord_y)
-
     def is_key_pressed(self, value):
+        '''Returns true if the key binding of the pressed key equals value.'''
         self.screen.wait_for_input(.00000001)
         key_event = self.screen.get_event()
-        if key_event == None or not isinstance(key_event, KeyboardEvent):
+        if key_event is None or not isinstance(key_event, KeyboardEvent):
             return False
         key_pressed = chr(key_event.key_code)
 
@@ -123,7 +113,7 @@ class IOManager():
             return self.is_key_pressed(value)
 
     def wait_for_input(self):
-        '''Stop execution until a key is pressed.'''
+        '''Stop execution until a key is pressed, and return its key binding.'''
         self.screen.wait_for_input(999999)
         key_event = self.screen.get_event()
 
@@ -133,10 +123,34 @@ class IOManager():
         except AttributeError:
             return self.wait_for_input()
 
+    def play_tone(self, time):
+        '''Play a single tone for (time * 1/60) seconds.'''
+        # Empty because the Windows WSL where I work doesn't support audio
+        pass
+
+    def _get_displayed_sprite_at(self, pos_x, pos_y):
+        '''Fetch what is being displayed at the given coordinates.'''
+        retval = '0b'
+
+        for index in range(8):
+            (corrected_x, corrected_y) = fix_overflowing_coordinates(pos_x + index, pos_y)
+            if chr(self.screen.get_from(corrected_x, corrected_y)[0]) == 'X':
+                retval += '1'
+            else:
+                retval += '0'
+
+        return int(retval, 2)
+
+    def _draw_screen(self):
+        '''Copy the display buffer to the graphics library buffer.'''
+        for coord_y in range(32):
+            for coord_x in range(64):
+                if self.display_buffer[coord_y][coord_x] == 1:
+                    self.screen.print_at('X', coord_x, coord_y)
+                else:
+                    self.screen.print_at(' ', coord_x, coord_y)
+
     def _load_key_bindings_config(self):
+        '''Load key binding settings from key_bindings.json.'''
         with open('key_bindings.json') as CONFIG_FILE:
             self.key_binding = json.load(CONFIG_FILE)
-
-    def play_tone(self, time):
-        pass  
-        # Empty because the Windows WSL where I work doesn't support audio

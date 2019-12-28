@@ -13,6 +13,7 @@ def nnn_format_to_xkk(arg):
 
     return (arg_x, arg_kk)
 
+
 def nnn_format_to_xyn(arg):
     '''Separate a 12-bit function argument into three 4-bit arguments.'''
     arg_x = (arg & 0xF00) >> 8
@@ -21,6 +22,7 @@ def nnn_format_to_xyn(arg):
 
     return (arg_x, arg_y, arg_n)
 
+
 def nnn_to_bcd(arg):
     '''Take a 12-bit argument and separate its decimal representation into its hundreds, tens and ones digits.'''
     hundreds_digit = arg // 100
@@ -28,6 +30,7 @@ def nnn_to_bcd(arg):
     ones_digit = (arg % 10)
 
     return (hundreds_digit, tens_digit, ones_digit)
+
 
 class Chip8:
     '''Emulated Chip-8 machine.
@@ -87,6 +90,22 @@ class Chip8:
         self._execute_instruction(to_execute)
 
         self._move_to_next_instruction()
+
+    def push_to_stack(self, value):
+        '''Push a value to the stack.'''
+        if self.reg_sp == 0xF:
+            raise Exception('Full stack.')
+
+        self.stack[self.reg_sp] = value
+        self.reg_sp += 1
+
+    def pop_from_stack(self):
+        '''Pop a value from the stack.'''
+        if self.reg_sp == 0:
+            raise Exception('Empty Stack')
+
+        self.reg_sp -= 1
+        return self.stack[self.reg_sp]
 
     # Opcode implementations
     def _execute_instruction(self, instruction):
@@ -370,19 +389,3 @@ class Chip8:
     def _move_to_next_instruction(self):
         '''Increase the PC register to point to the next instruction.'''
         self.reg_pc += 2  # Instructions are 2 bytes long
-
-    def push_to_stack(self, value):
-        '''Push a value to the stack.'''
-        if self.reg_sp == 0xF:
-            raise Exception('Full stack.')
-
-        self.stack[self.reg_sp] = value
-        self.reg_sp += 1
-
-    def pop_from_stack(self):
-        '''Pop a value from the stack.'''
-        if self.reg_sp == 0:
-            raise Exception('Empty Stack')
-
-        self.reg_sp -= 1
-        return self.stack[self.reg_sp]
