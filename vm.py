@@ -237,6 +237,7 @@ class Chip8:
             self.reg_v[0xF] = 0
 
         self.reg_v[arg_x] -= self.reg_v[arg_y]
+        self.reg_v[arg_x] %= 256
 
     def _instruction_8xy6(self, arg_x, arg_y):
         '''Instruction 8xy6 [SHR Vx {, Vy}].'''

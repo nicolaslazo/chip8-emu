@@ -33,7 +33,7 @@ class IOManager():
         # Video setup
         self.display_buffer = [[0] * 64 for _ in range(32)]  # 64x32 resolution
         self._display_lock = threading.Lock()
-        Screen.wrapper(self.main_loop)
+        Screen.wrapper(self.main_loop, catch_interrupt=False)
 
     def main_loop(self, screen):
         '''Emulates a Chip-8 machine cycle.'''
@@ -122,6 +122,8 @@ class IOManager():
             return self.key_binding[key_pressed]
         except AttributeError:
             return self.wait_for_input()
+        except KeyError:
+            return self.wait_for_input()
 
     def play_tone(self, time):
         '''Play a single tone for (time * 1/60) seconds.'''
@@ -146,9 +148,9 @@ class IOManager():
         for coord_y in range(32):
             for coord_x in range(64):
                 if self.display_buffer[coord_y][coord_x] == 1:
-                    self.screen.print_at('X', coord_x, coord_y)
+                    self.screen.print_at('X', coord_x, coord_y, bg=Screen.COLOUR_WHITE)
                 else:
-                    self.screen.print_at(' ', coord_x, coord_y)
+                    self.screen.print_at(' ', coord_x, coord_y, bg=Screen.COLOUR_BLACK)
 
     def _load_key_bindings_config(self):
         '''Load key binding settings from key_bindings.json.'''
