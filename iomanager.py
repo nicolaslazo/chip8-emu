@@ -33,6 +33,7 @@ class IOManager():
         # Video setup
         self.display_buffer = [[0] * 64 for _ in range(32)]  # 64x32 resolution
         self._display_lock = threading.Lock()
+        self._dirty_bit = False
         Screen.wrapper(self.main_loop, catch_interrupt=False)
 
     def main_loop(self, screen):
@@ -44,8 +45,12 @@ class IOManager():
 
             with self._display_lock:
                 self.print_debug_info()
-                self._draw_screen()
-                screen.refresh()
+
+                if self._dirty_bit:
+                    self._draw_screen()
+                    screen.refresh()
+
+                    self._dirty_bit = False
 
     def draw_sprite(self, sprite, pos_x, pos_y):
         '''Draw a sprite in the specified coordinates.'''
@@ -59,6 +64,8 @@ class IOManager():
                 if (sprite_bit == '0' and screen_char == 'X') or (sprite_bit == '1' and screen_char == ' '):
                     xored_bit = 1
                 self.display_buffer[corrected_y][corrected_x] = xored_bit
+
+            self._dirty_bit = True
 
     def check_collission(self, sprite, pos_x, pos_y):
         '''Returns True if sprite collides with what is already drawn in the given coordinates.'''
