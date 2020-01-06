@@ -22,3 +22,9 @@ Thanks to Cowgod for his technical reference. (http://devernay.fr2ee.fr/hacks/ch
   * Language choice in a project isn't simply a matter of ease of development vs. performance, implementing a low level interpreter in a high level scripting language feels really awkward.
   * I need to test out a library in a small scale project before commiting to something like this. Asciimatics is a terminal graphics library, yes, but it's mostly oriented to the arrangement of pre-built widgets. Maybe curses would've been a better pick for me. I might try that later on.
   * I have to find a better way to debug console graphics code. Asciimatics messed with the pdb output and debugging was a confusing and annoying process that I tried to avoid as much as possible and that lead to a excruciatingly long bug fixing phase down the line.
+
+# Compatibility
+
+My goal was to reach 100% compatibility with all Chip-8 programs but this project was getting too long and sometimes you have to learn when to cut it short. The programs I tested where separated into three folders, by how well they work at the current time. "Broken" holds programs that simply show garbage or crash the emulator. "Partially working" contains programs that look like they might easily work if you fix a bug or two. "Working" is self explanatory.
+
+One important detail to note is that some of the programs in the "broken" category might not work because they were poorly documented and they were actually meant to run in a Super Chip-48.
